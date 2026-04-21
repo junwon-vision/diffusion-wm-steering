@@ -408,9 +408,12 @@ const TASK_EMOJI = {
 };
 
 const TASK_DISPLAY = {
-  candy_coffee: 'coffee bag',
-  candy_gummy: 'gummy bear',
-  coffee: 'coffee bean'
+  candy_coffee: 'Coffee bag',
+  candy_gummy: 'Gummy bears',
+  coffee: 'Coffee beans',
+  knife: 'Knife placement',
+  pickup: 'Spoon',
+  jenga: 'Jenga stack'
 };
 
 function taskDisplayName(name) {
@@ -628,9 +631,12 @@ function buildManipPanel(task, evals) {
 
   // Task text
   const tt = document.createElement('div');
-  tt.className = 'task-text'; tt.textContent = 'Loading…';
+  tt.className = 'task-text';
+  const ttLbl = document.createElement('strong'); ttLbl.textContent = 'PROMPT for VLM: ';
+  const ttTxt = document.createElement('span');   ttTxt.textContent = 'Loading…';
+  tt.appendChild(ttLbl); tt.appendChild(ttTxt);
   panel.appendChild(tt);
-  loadText(`manipulation/${task}/task.txt`, tt);
+  loadText(`manipulation/${task}/task.txt`, ttTxt);
 
   // Videos — vertical stack
   const va = document.createElement('div');
@@ -738,7 +744,10 @@ function buildDrivingUncondPanel() {
   panel.appendChild(hdr);
 
   const tt = document.createElement('div');
-  tt.className = 'task-text'; tt.textContent = 'Loading…';
+  tt.className = 'task-text';
+  const ttLbl1 = document.createElement('strong'); ttLbl1.textContent = 'PROMPT for VLM: ';
+  const ttTxt1 = document.createElement('span');   ttTxt1.textContent = 'Loading…';
+  tt.appendChild(ttLbl1); tt.appendChild(ttTxt1);
   panel.appendChild(tt);
 
   // Videos — horizontal
@@ -791,7 +800,7 @@ function buildDrivingUncondPanel() {
 
   function loadSc(sc) {
     thumbBtns.forEach(b=>b.classList.toggle('active',b.dataset.sc===sc));
-    loadText(`${DRIVING_UNCOND_ROOT}/${sc}/task.txt`, tt, `${DRIVING_UNCOND_ROOT}/${sc}`);
+    loadText(`${DRIVING_UNCOND_ROOT}/${sc}/task.txt`, ttTxt1, `${DRIVING_UNCOND_ROOT}/${sc}`);
     vids[0].video.src = `${DRIVING_UNCOND_ROOT}/${sc}/initial.mp4`;
     vids[1].video.src = `${DRIVING_UNCOND_ROOT}/${sc}/pessimistic.mp4`;
     let rdy=0;
@@ -833,7 +842,10 @@ function buildDrivingCondPanel() {
   panel.appendChild(hdr);
 
   const tt = document.createElement('div');
-  tt.className = 'task-text'; tt.textContent = 'Loading…';
+  tt.className = 'task-text';
+  const ttLbl2 = document.createElement('strong'); ttLbl2.textContent = 'PROMPT for VLM: ';
+  const ttTxt2 = document.createElement('span');   ttTxt2.textContent = 'Loading…';
+  tt.appendChild(ttLbl2); tt.appendChild(ttTxt2);
   panel.appendChild(tt);
 
   // Videos — horizontal
@@ -899,7 +911,7 @@ function buildDrivingCondPanel() {
         `${DRIVING_COND_ROOT}/${sc}/task.txt`,
         `${DRIVING_COND_ROOT}/${sc}/${action}/task.txt`
       ],
-      tt,
+      ttTxt2,
       fbKey
     );
     vids[0].video.src = `${DRIVING_COND_ROOT}/${sc}/${action}/initial.mp4`;
@@ -1218,7 +1230,7 @@ function buildRewardCharts(container) {
 // ══════════════════════════════════════════════════════════════════════════════
 function buildStepByStep() {
   const STEPS_DIR = 'step-by-step';
-  const TASK_TEXT  = 'There is a pedestrian in front of the ego vehicle. Is it true that a pedestrian crosses in front of the ego vehicle?';
+  const TASK_TEXT  = '<strong>PROMPT for VLM:</strong> "There is a pedestrian in front of the ego vehicle. Is it true that a pedestrian crosses in front of the ego vehicle?"';
 
   // Canvas constants
   const W = 320, H = 320, cx = 160, cy = 162, R = 95, sigma = 20;
@@ -1314,7 +1326,7 @@ function buildStepByStep() {
   // Task text directly above the video
   const taskTextEl = document.createElement('div');
   taskTextEl.className = 'task-text';
-  taskTextEl.textContent = TASK_TEXT;
+  taskTextEl.innerHTML = TASK_TEXT;
   rightPane.appendChild(taskTextEl);
 
   // Video area
@@ -1537,7 +1549,7 @@ function build() {
   // ── Step-by-Step ──
   const s4 = document.createElement('div');
   s4.className = 'section'; s4.id = 'step-by-step';
-  s4.innerHTML = `<h2 class="section-title">Noise Optimization for Steering World Models</h2>
+  s4.innerHTML = `<h2 class="section-title">Noise Optimization for Steering Uncertain World Models</h2>
     <p class="section-subtitle">We steer diffusion-based world model generations by optimizing the initial noise, leaving model weights unchanged. Because different initial noises yield different rollouts, gradient ascent on a criterion (e.g., a VLM score) can push the generation toward maximizing the score. However, the noise space is high-dimensional: its probability mass concentrates on a thin shell (the <em>typical set</em>), leaving the interior and the far exterior as low-density, out-of-distribution regions. Naive optimization without regularization drifts off this shell, producing implausible generations.</p>`;
   s4.appendChild(buildStepByStep());
   root.appendChild(s4);
