@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ctrl-World Results</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f6fa; color: #222; }
+    header { background: #0048a6; color: #fff; padding: 1.2rem 2rem; }
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    nav { display: flex; gap: 0.5rem; padding: 1rem 2rem; background: #fff; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+    nav button {
+      padding: 0.4rem 1.2rem; border: 1px solid #0048a6; border-radius: 4px;
+      background: #fff; color: #0048a6; cursor: pointer; font-size: 0.9rem;
+    }
+    nav button.active { background: #0048a6; color: #fff; }
+    main { padding: 1.5rem 2rem; }
+    section { display: none; }
+    section.active { display: block; }
+    h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #0048a6; }
+    .subtitle { font-size: 0.85rem; color: #666; margin-bottom: 1rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.1); padding: 1rem; }
+    .card h3 { font-size: 0.95rem; margin-bottom: 0.75rem; color: #444; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap-wide { position: relative; height: 340px; }
+    select { padding: 0.3rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+    .controls { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .legend { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Ctrl-World Evaluation Results</h1>
+</header>
+<nav>
+  <button class="active" onclick="showTab('failure', this)">Failure Detection</button>
+  <button onclick="showTab('optim', this)">Reward Function</button>
+</nav>
+<main>
+
+<!-- ── Failure Detection ─────────────────────────────────────── -->
+<section id="failure" class="active">
+  <h2>Failure Detection Rate by Ground-Truth Label</h2>
+  <p class="subtitle">Bars show proportion of trials classified as failure; error bars are 95% Wilson CI.</p>
+  <div class="legend" id="failure-legend"></div>
+  <div class="row">
+    <div class="card">
+      <h3>G.T. Failure &nbsp;(higher = better detection)</h3>
+      <div class="chart-wrap"><canvas id="chart-gt-failure"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>G.T. Success &nbsp;(lower = fewer false positives)</h3>
+      <div class="chart-wrap"><canvas id="chart-gt-success"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Reward Function ──────────────────────────────────────────────── -->
+<section id="optim">
+  <h2>Oolong Optimization: Base vs. Optim vs. Nominal</h2>
+  <div class="controls">
+    <label><strong>Reward function:</strong>&nbsp;<select id="reward-select"></select></label>
+  </div>
+  <div class="legend" id="optim-legend"></div>
+  <div class="card">
+    <div class="chart-wrap-wide"><canvas id="optim-chart"></canvas></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ── Inline data (no fetch needed) ─────────────────────────────
+const FAILURE_DATA = {"methods":["nominal","best-of-n","ours (pessimistic)"],"colors":{"nominal":"#0091ff","best-of-n":"#0048a6","ours (pessimistic)":"#ff9500"},"tasks":{"Candy Coffee":{"gt_failure":{"nominal":{"p":0.4118,"lo":0.1112,"hi":0.121,"n":17,"k":7},"best-of-n":{"p":0.7059,"lo":0.1194,"hi":0.0966,"n":17,"k":12},"ours (pessimistic)":{"p":1.0,"lo":0.0556,"hi":0.0,"n":17,"k":17}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0417,"n":23,"k":0},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.0417,"n":23,"k":0},"ours (pessimistic)":{"p":0.1304,"lo":0.0551,"hi":0.0858,"n":23,"k":3}}},"Candy Gummy":{"gt_failure":{"nominal":{"p":0.2857,"lo":0.1032,"hi":0.1318,"n":14,"k":4},"best-of-n":{"p":0.5,"lo":0.1291,"hi":0.1291,"n":14,"k":7},"ours (pessimistic)":{"p":0.7143,"lo":0.1318,"hi":0.1032,"n":14,"k":10}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.037,"n":26,"k":0},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.037,"n":26,"k":0},"ours (pessimistic)":{"p":0.0,"lo":0.0,"hi":0.037,"n":26,"k":0}}},"Coffee":{"gt_failure":{"nominal":{"p":0.8,"lo":0.1509,"hi":0.0964,"n":10,"k":8},"best-of-n":{"p":1.0,"lo":0.0909,"hi":0.0,"n":10,"k":10},"ours (pessimistic)":{"p":1.0,"lo":0.0909,"hi":0.0,"n":10,"k":10}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0833,"n":11,"k":0},"best-of-n":{"p":0.0909,"lo":0.0556,"hi":0.1238,"n":11,"k":1},"ours (pessimistic)":{"p":0.4545,"lo":0.14,"hi":0.1476,"n":11,"k":5}}},"Jenga":{"gt_failure":{"nominal":{"p":0.4545,"lo":0.1019,"hi":0.1058,"n":22,"k":10},"best-of-n":{"p":0.5909,"lo":0.1065,"hi":0.0986,"n":22,"k":13},"ours (pessimistic)":{"p":0.9545,"lo":0.0675,"hi":0.028,"n":22,"k":21}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0714,"n":13,"k":0},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.0714,"n":13,"k":0},"ours (pessimistic)":{"p":0.1538,"lo":0.0748,"hi":0.1243,"n":13,"k":2}}},"Knife":{"gt_failure":{"nominal":{"p":0.8,"lo":0.1205,"hi":0.083,"n":15,"k":12},"best-of-n":{"p":0.9333,"lo":0.0951,"hi":0.0409,"n":15,"k":14},"ours (pessimistic)":{"p":1.0,"lo":0.0625,"hi":0.0,"n":15,"k":15}},"gt_success":{"nominal":{"p":0.125,"lo":0.0762,"hi":0.1595,"n":8,"k":1},"best-of-n":{"p":0.25,"lo":0.1192,"hi":0.1748,"n":8,"k":2},"ours (pessimistic)":{"p":0.5,"lo":0.1667,"hi":0.1667,"n":8,"k":4}}},"Pickup":{"gt_failure":{"nominal":{"p":0.6111,"lo":0.1178,"hi":0.1061,"n":18,"k":11},"best-of-n":{"p":0.6667,"lo":0.1173,"hi":0.0997,"n":18,"k":12},"ours (pessimistic)":{"p":0.9444,"lo":0.0809,"hi":0.0341,"n":18,"k":17}},"gt_success":{"nominal":{"p":0.125,"lo":0.0528,"hi":0.0828,"n":24,"k":3},"best-of-n":{"p":0.1667,"lo":0.0624,"hi":0.0891,"n":24,"k":4},"ours (pessimistic)":{"p":0.3333,"lo":0.0878,"hi":0.1012,"n":24,"k":8}}}}};
+
+const OPTIM_DATA = {"tasks":["jenga","knife","coffee","pickup","candy_gummy","candy_coffee"],"reward_keys":["robometer_progress","robometer_success_prob","topreward","rewind","qwen","classifier_failure"],"settings":[{"key":"mean_base","label":"base","color":"#0048a6"},{"key":"final_optim","label":"optim","color":"#ff9500"},{"key":"final_base","label":"nominal","color":"#0091ff"}],"qwen_flip_tasks":["candy_coffee","knife","candy_gummy","coffee"],"data":{"robometer_progress":{"jenga":{"base":{"mean":0.525459,"stderr":0.00311,"n":180},"optim":{"mean":0.503563,"stderr":0.006358,"n":36},"nominal":{"mean":0.546079,"stderr":0.006415,"n":36}},"knife":{"base":{"mean":0.343155,"stderr":0.006885,"n":115},"optim":{"mean":0.312358,"stderr":0.014248,"n":23},"nominal":{"mean":0.372316,"stderr":0.015744,"n":23}},"coffee":{"base":{"mean":0.522315,"stderr":0.007421,"n":105},"optim":{"mean":0.495722,"stderr":0.015721,"n":21},"nominal":{"mean":0.550285,"stderr":0.015258,"n":21}},"pickup":{"base":{"mean":0.392423,"stderr":0.004269,"n":210},"optim":{"mean":0.360367,"stderr":0.008377,"n":42},"nominal":{"mean":0.419596,"stderr":0.008461,"n":42}},"candy_gummy":{"base":{"mean":0.496632,"stderr":0.003299,"n":200},"optim":{"mean":0.462484,"stderr":0.006008,"n":40},"nominal":{"mean":0.517993,"stderr":0.006795,"n":40}},"candy_coffee":{"base":{"mean":0.471963,"stderr":0.003404,"n":200},"optim":{"mean":0.417424,"stderr":0.006783,"n":40},"nominal":{"mean":0.495524,"stderr":0.006626,"n":40}}},"robometer_success_prob":{"jenga":{"base":{"mean":0.060928,"stderr":0.001674,"n":180},"optim":{"mean":0.044916,"stderr":0.002754,"n":36},"nominal":{"mean":0.074744,"stderr":0.003975,"n":36}},"knife":{"base":{"mean":0.028665,"stderr":0.001069,"n":115},"optim":{"mean":0.022717,"stderr":0.001193,"n":23},"nominal":{"mean":0.03591,"stderr":0.002865,"n":23}},"coffee":{"base":{"mean":0.100764,"stderr":0.007998,"n":105},"optim":{"mean":0.077769,"stderr":0.014672,"n":21},"nominal":{"mean":0.125137,"stderr":0.018143,"n":21}},"pickup":{"base":{"mean":0.052629,"stderr":0.001322,"n":210},"optim":{"mean":0.039552,"stderr":0.001791,"n":42},"nominal":{"mean":0.065207,"stderr":0.00327,"n":42}},"candy_gummy":{"base":{"mean":0.062434,"stderr":0.001496,"n":200},"optim":{"mean":0.045142,"stderr":0.001976,"n":40},"nominal":{"mean":0.076073,"stderr":0.003638,"n":40}},"candy_coffee":{"base":{"mean":0.048509,"stderr":0.001352,"n":200},"optim":{"mean":0.032998,"stderr":0.001795,"n":40},"nominal":{"mean":0.058783,"stderr":0.003286,"n":40}}},"topreward":{"jenga":{"base":{"mean":-11.836206,"stderr":0.013282,"n":180},"optim":{"mean":-11.960511,"stderr":0.024556,"n":36},"nominal":{"mean":-11.708343,"stderr":0.030351,"n":36}},"knife":{"base":{"mean":-10.247053,"stderr":0.018588,"n":115},"optim":{"mean":-10.420551,"stderr":0.028368,"n":23},"nominal":{"mean":-10.107385,"stderr":0.039893,"n":23}},"coffee":{"base":{"mean":-10.469977,"stderr":0.040566,"n":105},"optim":{"mean":-10.72324,"stderr":0.07328,"n":21},"nominal":{"mean":-10.229957,"stderr":0.089759,"n":21}},"pickup":{"base":{"mean":-9.952154,"stderr":0.020048,"n":210},"optim":{"mean":-10.28428,"stderr":0.037539,"n":42},"nominal":{"mean":-9.769429,"stderr":0.040542,"n":42}},"candy_gummy":{"base":{"mean":-10.197777,"stderr":0.02008,"n":200},"optim":{"mean":-10.337537,"stderr":0.042391,"n":40},"nominal":{"mean":-10.053955,"stderr":0.043887,"n":40}},"candy_coffee":{"base":{"mean":-10.491048,"stderr":0.019392,"n":200},"optim":{"mean":-10.61917,"stderr":0.038394,"n":40},"nominal":{"mean":-10.326211,"stderr":0.045287,"n":40}}},"rewind":{"jenga":{"base":{"mean":0.304307,"stderr":0.003108,"n":180},"optim":{"mean":0.289474,"stderr":0.00541,"n":36},"nominal":{"mean":0.330581,"stderr":0.006372,"n":36}},"knife":{"base":{"mean":0.322414,"stderr":0.004925,"n":115},"optim":{"mean":0.292483,"stderr":0.011662,"n":23},"nominal":{"mean":0.348303,"stderr":0.010176,"n":23}},"coffee":{"base":{"mean":0.337054,"stderr":0.005277,"n":105},"optim":{"mean":0.297479,"stderr":0.010141,"n":21},"nominal":{"mean":0.3615,"stderr":0.011309,"n":21}},"pickup":{"base":{"mean":0.295119,"stderr":0.003589,"n":210},"optim":{"mean":0.250572,"stderr":0.006592,"n":42},"nominal":{"mean":0.326899,"stderr":0.007514,"n":42}},"candy_gummy":{"base":{"mean":0.407911,"stderr":0.005067,"n":200},"optim":{"mean":0.364323,"stderr":0.010075,"n":40},"nominal":{"mean":0.43581,"stderr":0.011328,"n":40}},"candy_coffee":{"base":{"mean":0.21139,"stderr":0.003173,"n":200},"optim":{"mean":0.16611,"stderr":0.00589,"n":40},"nominal":{"mean":0.243898,"stderr":0.005995,"n":40}}},"qwen":{"jenga":{"base":{"mean":1.986806,"stderr":0.304618,"n":180},"optim":{"mean":-11.999132,"stderr":0.765372,"n":36},"nominal":{"mean":3.869792,"stderr":0.534311,"n":36}},"knife":{"base":{"mean":1.804348,"stderr":0.162357,"n":115},"optim":{"mean":-0.404891,"stderr":0.481513,"n":23},"nominal":{"mean":0.903533,"stderr":0.31115,"n":23}},"coffee":{"base":{"mean":-0.23006,"stderr":0.725167,"n":105},"optim":{"mean":-4.78869,"stderr":1.419933,"n":21},"nominal":{"mean":-2.758929,"stderr":1.565681,"n":21}},"pickup":{"base":{"mean":5.326935,"stderr":0.101202,"n":210},"optim":{"mean":-1.469494,"stderr":0.351201,"n":42},"nominal":{"mean":6.506696,"stderr":0.205795,"n":42}},"candy_gummy":{"base":{"mean":5.311875,"stderr":0.09911,"n":200},"optim":{"mean":-6.857031,"stderr":0.499187,"n":40},"nominal":{"mean":4.290625,"stderr":0.209017,"n":40}},"candy_coffee":{"base":{"mean":6.503125,"stderr":0.440989,"n":200},"optim":{"mean":-2.014844,"stderr":0.762472,"n":40},"nominal":{"mean":3.666406,"stderr":1.035867,"n":40}}},"classifier_failure":{"jenga":{"base":{"mean":0.217237,"stderr":0.024505,"n":180},"optim":{"mean":0.12856,"stderr":0.040293,"n":36},"nominal":{"mean":0.32766,"stderr":0.061667,"n":36}},"knife":{"base":{"mean":0.680945,"stderr":0.03561,"n":115},"optim":{"mean":0.524649,"stderr":0.084955,"n":23},"nominal":{"mean":0.758971,"stderr":0.072522,"n":23}},"coffee":{"base":{"mean":0.455513,"stderr":0.04108,"n":105},"optim":{"mean":0.366907,"stderr":0.091108,"n":21},"nominal":{"mean":0.613412,"stderr":0.095299,"n":21}},"pickup":{"base":{"mean":0.122656,"stderr":0.018368,"n":210},"optim":{"mean":0.092477,"stderr":0.040682,"n":42},"nominal":{"mean":0.191344,"stderr":0.048701,"n":42}},"candy_gummy":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}},"candy_coffee":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}}}}};
+
+// ── Task display config ───────────────────────────────────────
+const TASK_EMOJIS = {
+  'Candy Coffee': '☕🛍️', 'Candy Gummy': '🍬',
+  'Coffee': '☕⚖️', 'Jenga': '🧩', 'Knife': '🔪', 'Pickup': '🤏',
+  'jenga': '🧩', 'knife': '🔪', 'coffee': '☕⚖️',
+  'pickup': '🤏', 'candy_gummy': '🍬', 'candy_coffee': '☕🛍️',
+};
+const TASK_DISPLAY = {
+  'Candy Coffee': 'Coffee Bag', 'Candy Gummy': 'Gummy Bear',
+  'Jenga': 'Jenga', 'Knife': 'Knife', 'Coffee': 'Coffee Bean', 'Pickup': 'Pickup',
+  'jenga': 'Jenga', 'knife': 'Knife', 'coffee': 'Coffee Bean',
+  'pickup': 'Pickup', 'candy_gummy': 'Gummy Bear', 'candy_coffee': 'Coffee Bag',
+};
+const REWARD_DISPLAY = {
+  'robometer_progress': 'Robometer Progress',
+  'robometer_success_prob': 'Robometer Success Prob.',
+  'topreward': 'Top Reward',
+  'rewind': 'Rewind',
+  'qwen': 'Qwen',
+  'classifier_failure': 'Classifier Failure',
+};
+
+function taskLabel(name) {
+  const emoji = TASK_EMOJIS[name] || '';
+  const display = TASK_DISPLAY[name] || name;
+  return emoji ? `${emoji} ${display}` : display;
+}
+
+// ── Tab switching ─────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Error-bar plugin (asymmetric lo/hi) ──────────────────────
+const errorBarPlugin = {
+  id: 'errorBar',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    chart.data.datasets.forEach((ds, di) => {
+      if (!ds.errLo && !ds.errSym) return;
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((bar, i) => {
+        const val = ds.data[i];
+        if (val == null || isNaN(val)) return;
+
+        let lo, hi;
+        if (ds.errLo) {
+          lo = ds.errLo[i];
+          hi = ds.errHi[i];
+        } else {
+          lo = hi = ds.errSym[i];
+        }
+        if ((lo == null || isNaN(lo)) && (hi == null || isNaN(hi))) return;
+        lo = lo || 0; hi = hi || 0;
+
+        const x = bar.x;
+        const yTop = chart.scales.y.getPixelForValue(val + hi);
+        const yBot = chart.scales.y.getPixelForValue(val - lo);
+        const cap = 5;
+
+        ctx.save();
+        ctx.strokeStyle = ds.borderColor;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(x, yTop); ctx.lineTo(x, yBot); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - cap, yTop); ctx.lineTo(x + cap, yTop); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - cap, yBot); ctx.lineTo(x + cap, yBot); ctx.stroke();
+        ctx.restore();
+      });
+    });
+  },
+};
+Chart.register(errorBarPlugin);
+
+// ── Chart helpers ─────────────────────────────────────────────
+function makeBarOpts(yLabel, yMin, yMax) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: 'index', intersect: false },
+    },
+    scales: {
+      x: { ticks: { font: { size: 12 } } },
+      y: {
+        beginAtZero: yMin === undefined,
+        ...(yMin !== undefined ? { min: yMin } : {}),
+        ...(yMax !== undefined ? { max: yMax } : {}),
+        title: { display: !!yLabel, text: yLabel, font: { size: 11 } },
+      },
+    },
+  };
+}
+
+// ── Failure Detection ─────────────────────────────────────────
+function renderFailure() {
+  const { methods, colors, tasks } = FAILURE_DATA;
+  const taskNames = Object.keys(tasks);
+
+  // Build legend
+  const legend = document.getElementById('failure-legend');
+  methods.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="legend-swatch" style="background:${colors[m]}"></div><span>${m}</span>`;
+    legend.appendChild(item);
+  });
+
+  const xLabels = taskNames.map(t => `${TASK_EMOJIS[t] || ''} ${TASK_DISPLAY[t] || t}`);
+
+  ['gt_failure', 'gt_success'].forEach(gtKey => {
+    const canvasId = gtKey === 'gt_failure' ? 'chart-gt-failure' : 'chart-gt-success';
+    const canvas = document.getElementById(canvasId);
+
+    const datasets = methods.map(m => {
+      const vals  = taskNames.map(t => tasks[t][gtKey]?.[m]?.p  ?? null);
+      const errLo = taskNames.map(t => tasks[t][gtKey]?.[m]?.lo ?? null);
+      const errHi = taskNames.map(t => tasks[t][gtKey]?.[m]?.hi ?? null);
+      return {
+        label: m,
+        data: vals,
+        errLo,
+        errHi,
+        backgroundColor: colors[m] + 'cc',
+        borderColor: colors[m],
+        borderWidth: 1,
+      };
+    });
+
+    new Chart(canvas, {
+      type: 'bar',
+      data: { labels: xLabels, datasets },
+      options: {
+        ...makeBarOpts('proportion classified as failure', 0, 1.12),
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const ds = ctx.dataset;
+                const v = ds.data[ctx.dataIndex];
+                const lo = ds.errLo?.[ctx.dataIndex];
+                const hi = ds.errHi?.[ctx.dataIndex];
+                if (v == null) return `${ds.label}: N/A`;
+                let s = `${ds.label}: ${(v * 100).toFixed(1)}%`;
+                if (lo != null) s += ` [−${(lo*100).toFixed(1)}%, +${(hi*100).toFixed(1)}%]`;
+                return s;
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+}
+
+// ── Reward Function ───────────────────────────────────────────
+let optimChart = null;
+
+function renderOptim() {
+  const { tasks, reward_keys, settings, qwen_flip_tasks, data } = OPTIM_DATA;
+
+  // Reward selector
+  const sel = document.getElementById('reward-select');
+  reward_keys.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = REWARD_DISPLAY[k] || k;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => drawOptimChart(sel.value));
+
+  // Legend
+  const legend = document.getElementById('optim-legend');
+  settings.forEach(({ label, color }) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="legend-swatch" style="background:${color}"></div><span>${label}</span>`;
+    legend.appendChild(item);
+  });
+
+  drawOptimChart(reward_keys[0]);
+}
+
+function drawOptimChart(rewardKey) {
+  const { tasks, settings, qwen_flip_tasks, data } = OPTIM_DATA;
+  const rewardData = data[rewardKey];
+  const isQwen = rewardKey === 'qwen';
+
+  const xLabels = tasks.map(t => {
+    const base = `${taskLabel(t)}`;
+    return isQwen && qwen_flip_tasks.includes(t) ? base + ' (−)' : base;
+  });
+
+  const datasets = settings.map(({ label, color }) => {
+    const vals = tasks.map(t => rewardData?.[t]?.[label]?.mean ?? null);
+    const errs = tasks.map(t => rewardData?.[t]?.[label]?.stderr ?? null);
+    return {
+      label,
+      data: vals,
+      errSym: errs,
+      backgroundColor: color + 'cc',
+      borderColor: color,
+      borderWidth: 1,
+    };
+  });
+
+  // Auto y-axis range
+  const allVals = datasets.flatMap((ds, di) =>
+    ds.data.map((v, i) => v != null ? [v - (ds.errSym[i]||0), v + (ds.errSym[i]||0)] : []).flat()
+  ).filter(v => v != null);
+  const yMin = Math.min(...allVals);
+  const yMax = Math.max(...allVals);
+  const pad = (yMax - yMin) * 0.15 || 0.1;
+
+  if (optimChart) optimChart.destroy();
+  const canvas = document.getElementById('optim-chart');
+  optimChart = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: xLabels, datasets },
+    options: {
+      ...makeBarOpts(REWARD_DISPLAY[rewardKey] || rewardKey, yMin - pad, yMax + pad),
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const ds = ctx.dataset;
+              const v = ds.data[ctx.dataIndex];
+              const e = ds.errSym?.[ctx.dataIndex];
+              if (v == null) return `${ds.label}: N/A`;
+              return `${ds.label}: ${v.toFixed(4)}${e != null ? ` ±${e.toFixed(4)}` : ''}`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────
+renderFailure();
+renderOptim();
+</script>
+</body>
+</html>

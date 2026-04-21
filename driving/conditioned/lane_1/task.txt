@@ -1,0 +1,1 @@
+Does a front vehicle currently in the left lane in the beginning of the sequence merge into the ego vehicle's lane?

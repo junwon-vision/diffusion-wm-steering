@@ -1,0 +1,1 @@
+There is a pedestrian in front of the ego vehicle. Is it true that a pedestrian crosses in front of the ego vehicle?

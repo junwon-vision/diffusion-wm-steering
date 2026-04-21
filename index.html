@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Steering Results</title>
+  <link rel="icon" href="anxiety.png" type="image/png">
+  <link rel="apple-touch-icon" href="anxiety.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    :root {
+      --safe: #2e7d32;
+      --safe-light: #e8f5e9;
+      --fail: #c62828;
+      --fail-light: #ffebee;
+      --accent: #1565c0;
+      --accent-light: #e3f2fd;
+      --text: #222;
+      --text-sec: #555;
+      --text-dim: #888;
+      --bg: #fff;
+      --bg-alt: #f7f8fa;
+      --border: #e0e0e0;
+      --max-w: 960px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ═══ Top nav ═══ */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    nav .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex; align-items: center; gap: 32px;
+      height: 52px; overflow-x: auto;
+    }
+    nav a {
+      color: var(--text-sec); text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      white-space: nowrap; padding: 14px 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    nav a:hover, nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ═══ Hero / title ═══ */
+    .hero {
+      text-align: center;
+      padding: 60px 24px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-brand {
+      display: flex; flex-direction: row; align-items: center;
+      justify-content: center; gap: 16px; margin-bottom: 8px;
+    }
+    .hero-icon {
+      width: 64px; height: 64px; object-fit: contain;
+      display: block; flex-shrink: 0;
+    }
+    .hero h1 {
+      font-size: 2.2rem; font-weight: 700;
+      letter-spacing: -0.02em; margin: 0;
+      text-align: left;
+    }
+    .hero p {
+      font-size: 1rem; color: var(--text-sec);
+      max-width: min(100%, 108ch);
+      margin: 0 auto;
+      text-wrap: balance;
+    }
+
+    /* ═══ Content ═══ */
+    .content { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+    .section { padding: 48px 0 24px; }
+    .section + .section { border-top: 1px solid var(--border); }
+    .section-title {
+      font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    .section-subtitle {
+      font-size: 0.92rem; color: var(--text-sec); margin-bottom: 32px;
+    }
+    .section-subtitle a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .section-subtitle a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    /* ═══ Panel (card) ═══ */
+    .panel {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      margin-bottom: 36px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .panel-header {
+      padding: 14px 20px; font-weight: 700; font-size: 1.05rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      text-transform: capitalize; background: var(--bg-alt);
+    }
+    .panel-header .badge {
+      font-size: 0.7rem; font-weight: 600; padding: 2px 10px;
+      border-radius: 100px; background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* ═══ Task text ═══ */
+    .task-text {
+      padding: 14px 20px; font-size: 0.9rem; line-height: 1.6;
+      color: var(--text-sec); border-bottom: 1px solid var(--border);
+      background: var(--bg-alt); white-space: pre-wrap; min-height: 36px;
+    }
+
+    /* ═══ Video area ═══ */
+    .video-area { display: flex; gap: 0; background: #000; position: relative; }
+    .video-area.vertical { flex-direction: column; }
+    .video-container { position: relative; flex: 1; min-width: 0; }
+    .video-container video { width: 100%; display: block; }
+    .video-container .vid-label {
+      position: absolute; top: 8px; left: 8px;
+      font-size: 0.7rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 6px; pointer-events: none; z-index: 5;
+      backdrop-filter: blur(6px); letter-spacing: 0.03em;
+      background: rgba(0,0,0,0.55); color: rgba(255,255,255,0.9);
+    }
+    /* Safe / fail — colored opaque background + white text */
+    .video-container.safe-label .vid-label {
+      background: rgba(76,175,80,0.7); color: #fff;
+    }
+    .video-container.fail-label .vid-label {
+      background: rgba(229,57,53,0.7); color: #fff;
+    }
+
+    /* ═══ Time bar ═══ */
+    .time-bar-wrap {
+      padding: 10px 20px; display: flex; align-items: center; gap: 12px;
+      border-top: 1px solid var(--border); background: var(--bg-alt);
+    }
+    .play-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border); background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 14px; color: var(--text);
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .play-btn:hover { background: var(--accent-light); }
+    .time-bar {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 5px; border-radius: 3px;
+      background: #ddd; outline: none; cursor: pointer;
+    }
+    .time-bar::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+      border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .time-label {
+      font-size: 0.75rem; color: var(--text-dim); min-width: 68px;
+      text-align: right; font-variant-numeric: tabular-nums;
+    }
+
+    /* ═══ Sliding thumbnail gallery ═══ */
+    .thumb-gallery {
+      padding: 12px 0; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0; position: relative;
+    }
+    .thumb-gallery-label {
+      font-size: 0.7rem; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 0 12px 0 20px; white-space: nowrap; flex-shrink: 0;
+    }
+    .thumb-arrow {
+      width: 30px; height: 60px; border: none;
+      background: rgba(255,255,255,0.85); color: var(--text-sec);
+      font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; z-index: 2; transition: background 0.15s;
+      border-radius: 6px;
+    }
+    .thumb-arrow:hover { background: var(--accent-light); color: var(--accent); }
+    .thumb-scroll {
+      flex: 1; overflow-x: auto; display: flex; gap: 8px;
+      padding: 4px 8px; scroll-behavior: smooth;
+      -ms-overflow-style: none; scrollbar-width: none;
+    }
+    .thumb-scroll::-webkit-scrollbar { display: none; }
+    .thumb-btn {
+      width: 110px; height: 68px; border-radius: 8px; overflow: hidden;
+      border: 2px solid var(--border); cursor: pointer;
+      position: relative; background: #000; flex-shrink: 0;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+    .thumb-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .thumb-btn.active { border-color: var(--accent); box-shadow: 0 2px 8px rgba(21,101,192,0.25); transform: translateY(-2px); }
+    .thumb-btn.safe-thumb { border-color: var(--safe); }
+    .thumb-btn.safe-thumb.active { box-shadow: 0 2px 8px rgba(46,125,50,0.25); }
+    .thumb-btn.fail-thumb { border-color: var(--fail); }
+    .thumb-btn.fail-thumb.active { box-shadow: 0 2px 8px rgba(198,40,40,0.25); }
+    .thumb-btn canvas, .thumb-btn video {
+      width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: block;
+    }
+    .thumb-btn .thumb-name {
+      position: absolute; bottom: 0; left: 0; right: 0; text-align: center;
+      font-size: 0.6rem; font-weight: 700; color: #fff;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      padding: 8px 4px 3px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ═══ Action buttons ═══ */
+    .action-strip {
+      padding: 10px 20px 14px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      background: var(--bg-alt);
+    }
+    .action-strip-label {
+      font-size: 0.7rem; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px;
+    }
+    .action-btn {
+      padding: 6px 18px; border-radius: 100px;
+      border: 2px solid var(--border); background: #fff;
+      color: var(--text-sec); font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s; text-transform: capitalize;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .action-btn.safe-action { border-color: var(--safe); color: var(--safe); }
+    .action-btn.safe-action:hover { background: var(--safe-light); }
+    .action-btn.safe-action.active { background: var(--safe); color: #fff; }
+    .action-btn.fail-action { border-color: var(--fail); color: var(--fail); }
+    .action-btn.fail-action:hover { background: var(--fail-light); }
+    .action-btn.fail-action.active { background: var(--fail); color: #fff; }
+
+    /* ═══ Task selector (pill buttons) ═══ */
+    .task-selector {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .task-sel-btn {
+      padding: 8px 20px; border-radius: 100px;
+      border: 1px solid var(--border); background: #fff;
+      color: var(--text-sec); font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s; text-transform: capitalize;
+    }
+    .task-sel-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .task-sel-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ═══ Quantitative bar charts ═══ */
+    .chart-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; padding: 20px 24px 16px;
+      margin-bottom: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .chart-card h3 {
+      font-size: 0.95rem; font-weight: 700; margin-bottom: 16px;
+      text-transform: capitalize;
+    }
+    .chart-legend {
+      display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    .chart-legend-item {
+      display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; color: var(--text-sec);
+    }
+    .chart-legend-swatch {
+      width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+    }
+    .subsection-title {
+      font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px;
+    }
+    .subsection-subtitle {
+      font-size: 0.88rem; color: var(--text-sec); margin-bottom: 20px;
+    }
+    .reward-selector {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;
+    }
+    .reward-selector label {
+      font-size: 0.8rem; font-weight: 600; color: var(--text-sec); margin-right: 4px;
+    }
+    .reward-selector select {
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.82rem; font-family: inherit; background: #fff; color: var(--text);
+      cursor: pointer;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 300px;
+    }
+
+    /* ═══ Footer ═══ */
+    footer {
+      text-align: center; padding: 40px 24px;
+      color: var(--text-dim); font-size: 0.82rem;
+      border-top: 1px solid var(--border); margin-top: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .hero h1 { font-size: 1.5rem; }
+      .hero-icon { width: 48px; height: 48px; }
+      .content { padding: 0 12px; }
+      .video-area { flex-direction: column !important; }
+      .thumb-btn { width: 90px; height: 56px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ Nav ═══ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#manipulation" class="active">Manipulation</a>
+    <a href="#quantitative">Quantitative Results</a>
+    <a href="#driving-unconditional">Driving (Unconditional)</a>
+    <a href="#driving-conditional">Driving (Conditional)</a>
+  </div>
+</nav>
+
+<!-- ═══ Hero ═══ -->
+<div class="hero">
+  <div class="hero-brand">
+    <img class="hero-icon" src="anxiety.png" width="64" height="64" alt="">
+    <h1>Pessimistic World Model Steering</h1>
+  </div>
+  <p>How can we steer the world model imaginations pessimistically, but meaningfully, for robust decision making?</p>
+</div>
+
+<!-- ═══ Content ═══ -->
+<div class="content" id="content"></div>
+
+<footer>
+  Steering Results Viewer
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════════════════
+const MANIPULATION = {
+  candy_coffee: [
+    "eval_0000","eval_0002_safe","eval_0004","eval_0007","eval_0010","eval_0011",
+    "eval_0013_safe","eval_0015","eval_0017_safe","eval_0019","eval_0035_safe",
+    "eval_0037_safe","eval_0039_safe","eval_0058","eval_0114","eval_0191","eval_0201"
+  ],
+  coffee: [
+    "eval_0003","eval_0006","eval_0011_safe","eval_0012_safe","eval_0015_safe","eval_0017","eval_0019"
+  ],
+  gummy: [
+    "eval_0001_safe","eval_0003_safe","eval_0004_safe","eval_0012_safe","eval_0016",
+    "eval_0018_safe","eval_0021","eval_0031","eval_0036_safe"
+  ],
+  jenga: [
+    "eval_0003","eval_0006_safe","eval_0007","eval_0010_safe","eval_0012_safe","eval_0013",
+    "eval_0016","eval_0019","eval_0022","eval_0024","eval_0026","eval_0028","eval_0033"
+  ],
+  knife: [
+    "eval_0001_safe","eval_0005","eval_0014","eval_0015_safe","eval_0018",
+    "eval_0020","eval_0021","eval_0022_safe"
+  ],
+  pickup: [
+    "eval_0001","eval_0002_safe","eval_0008","eval_0010","eval_0019_safe",
+    "eval_0020_safe","eval_0021_safe","eval_0026","eval_0028","eval_0036"
+  ]
+};
+
+const DRIVING_UNCOND = [
+  "collision","collision_2","cycle_1","lane_1","lane_2","lane_3","ped_1"
+];
+
+const DRIVING_COND = {
+  "424":           ["fast_1","fast_2","slow_safe","stop_safe"],
+  "585":           ["fast","slow_safe"],
+  "cyclist":       ["moving","stop_safe"],
+  "lane_1":        ["fast_safe","slow_safe"],
+  "pedestrian":    ["fast","slow_safe","stop_safe"],
+  "traffic_light": ["moving","stop_safe"],
+  "yield":         ["move","stop_safe"]
+};
+
+function isSafe(n) { return n.endsWith('_safe'); }
+function fmt(t) { const m=Math.floor(t/60), s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); }
+
+const TASK_EMOJI = {
+  candy_coffee: '☕🛍️',
+  coffee: '☕⚖️',
+  gummy: '\u{1F43B}',
+  candy_gummy: '\u{1F43B}',
+  jenga: '\u{1F9F1}',
+  knife: '\u{1F52A}',
+  pickup: '\u{1F944}'
+};
+
+const TASK_DISPLAY = {
+  candy_coffee: 'coffee bag',
+  candy_gummy: 'gummy bear',
+  coffee: 'coffee bean'
+};
+
+function taskDisplayName(name) {
+  const key = String(name).toLowerCase().replace(/\s+/g, '_');
+  return TASK_DISPLAY[key] || String(name).replace(/_/g, ' ');
+}
+
+// ── Task descriptions: edit below and/or the matching .txt under manipulation/ and driving/ when served over HTTP. ──
+const TASK_TEXTS = {
+  'manipulation/candy_coffee': "Put the coffee bag into the container without spilling",
+  'manipulation/coffee': "Pour the coffee beans into the bowl without spilling on the table.",
+  'manipulation/gummy': "Put the candy bag into the container without spilling",
+  'manipulation/jenga': "Stack an orange block on top of a blue block",
+  'manipulation/knife': "Place the knife inside of the blue bowl without falling out",
+  'manipulation/pickup': "Pick up the blue knife and keep the red spoon in the green plate.",
+  'driving/unconditional/collision': "Is a collision or crash between the ego vehicle and another vehicle occurring?",
+  'driving/unconditional/collision_2': "Is a collision or crash between the ego vehicle and another vehicle occurring?",
+  'driving/unconditional/cycle_1': "Does a cyclist in front of the ego vehicle cross a crossway?",
+  'driving/unconditional/lane_1': "Does a vehicle in the right lane merge into the ego vehicle's lane?",
+  'driving/unconditional/lane_2': "Does a yellow school bus in the right lane merge into the ego vehicle's lane?",
+  'driving/unconditional/lane_3': "Does a vehicle in the left lane merge into the ego vehicle's lane?",
+  'driving/unconditional/ped_1': "There is a pedestrian in front of the ego vehicle. Is it true that a pedestrian crosses in front of the ego vehicle?",
+  'driving/conditioned/424': "Is a collision or crash between the ego vehicle and another vehicle occurring?",
+  'driving/conditioned/585': "Is a collision or crash between the ego vehicle and another vehicle occurring?",
+  'driving/conditioned/cyclist': "Does a cyclist cross the road in front of the ego vehicle?",
+  'driving/conditioned/lane_1': "Does a front vehicle currently in the left lane in the beginning of the sequence merge into the ego vehicle's lane?",
+  'driving/conditioned/pedestrian': "There is a pedestrian in front of the ego vehicle. Is it true that a pedestrian crosses in front of the ego vehicle?",
+  'driving/conditioned/traffic_light': "At the beginning of the clip, the traffic lights were green. Is it true that, the red traffic light turns on?",
+  'driving/conditioned/yield': "Does a left vehicle in the intersection merge into the ego vehicle's lane?"
+};
+
+/** Matches repo layout: driving/unconditional/<scenario>/, driving/conditioned/<scenario>/ */
+const DRIVING_UNCOND_ROOT = 'driving/unconditional';
+const DRIVING_COND_ROOT = 'driving/conditioned';
+
+function resolveAssetUrl(path) {
+  const p = String(path).replace(/^\//, '');
+  try {
+    return new URL(p, new URL('./', window.location.href)).href;
+  } catch (e) {
+    return path;
+  }
+}
+
+const _textReqGen = new WeakMap();
+function nextTextReqId(el) {
+  const n = (_textReqGen.get(el) || 0) + 1;
+  _textReqGen.set(el, n);
+  return n;
+}
+function textReqStale(el, id) {
+  return (_textReqGen.get(el) || 0) !== id;
+}
+
+function xhrGetAsync(url) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    try { xhr.overrideMimeType('text/plain;charset=UTF-8'); } catch (e) {}
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState !== 4) return;
+      if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+      else resolve(null);
+    };
+    xhr.onerror = () => resolve(null);
+    xhr.ontimeout = () => resolve(null);
+    xhr.timeout = 15000;
+    try { xhr.send(); } catch (e) { resolve(null); }
+  });
+}
+
+const FETCH_TEXT_MS = 8000;
+
+async function fetchTextFirst(url) {
+  if (location.protocol === 'file:') {
+    const x = await xhrGetAsync(url);
+    if (x != null && String(x).trim()) return x;
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) return await r.text();
+    } catch (e) {}
+    return null;
+  }
+  let tid;
+  try {
+    const ctrl = new AbortController();
+    tid = setTimeout(() => ctrl.abort(), FETCH_TEXT_MS);
+    const r = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    if (r.ok) return await r.text();
+  } catch (e) {
+  } finally {
+    if (tid) clearTimeout(tid);
+  }
+  return xhrGetAsync(url);
+}
+
+/**
+ * Load plain-text task copy. Driving tasks use TASK_TEXTS only. Manipulation tries .txt (and description.txt) over the network, then falls back to TASK_TEXTS.
+ */
+function loadText(pathOrPaths, el, fallbackKey) {
+  const paths = Array.isArray(pathOrPaths) ? pathOrPaths : [pathOrPaths];
+  let key = fallbackKey;
+  if (key == null) {
+    const last = paths[paths.length - 1];
+    key = last.replace(/\/(task|description)\.txt$/, '');
+  }
+  if (key.startsWith('driving/') && TASK_TEXTS[key]) {
+    el.textContent = String(TASK_TEXTS[key]).trim();
+    return;
+  }
+
+  const tryList = [];
+  for (const p of paths) {
+    tryList.push(p);
+    if (/\/task\.txt$/.test(p)) tryList.push(p.replace(/\/task\.txt$/, '/description.txt'));
+  }
+  const uniqueTry = [...new Set(tryList)];
+
+  const fallback = TASK_TEXTS[key] || '—';
+  const reqId = nextTextReqId(el);
+  (async () => {
+    try {
+      for (const p of uniqueTry) {
+        const url = resolveAssetUrl(p);
+        const text = await fetchTextFirst(url);
+        if (textReqStale(el, reqId)) return;
+        if (text != null && String(text).trim()) {
+          el.textContent = String(text).trim();
+          return;
+        }
+      }
+      if (textReqStale(el, reqId)) return;
+      el.textContent = fallback;
+    } catch (e) {
+      if (!textReqStale(el, reqId)) el.textContent = fallback;
+    }
+  })();
+}
+
+// ── Helper: grab last frame of a video as a canvas ──
+function captureLastFrame(src, canvas) {
+  const v = document.createElement('video');
+  v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = src;
+  v.addEventListener('loadedmetadata', () => {
+    v.currentTime = Math.max(0, v.duration - 0.05);
+  });
+  v.addEventListener('seeked', () => {
+    canvas.width = v.videoWidth || 160;
+    canvas.height = v.videoHeight || 100;
+    canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
+    v.src = ''; // free resource
+  }, { once: true });
+}
+
+// ── Helper: build sliding thumbnail gallery ──
+function buildThumbGallery(label) {
+  const wrap = document.createElement('div');
+  wrap.className = 'thumb-gallery';
+  const lbl = document.createElement('span');
+  lbl.className = 'thumb-gallery-label'; lbl.textContent = label;
+  const leftArr = document.createElement('button');
+  leftArr.className = 'thumb-arrow'; leftArr.innerHTML = '‹';
+  const scroll = document.createElement('div');
+  scroll.className = 'thumb-scroll';
+  const rightArr = document.createElement('button');
+  rightArr.className = 'thumb-arrow'; rightArr.innerHTML = '›';
+  leftArr.addEventListener('click', () => { scroll.scrollLeft -= 240; });
+  rightArr.addEventListener('click', () => { scroll.scrollLeft += 240; });
+  wrap.appendChild(lbl);
+  wrap.appendChild(leftArr);
+  wrap.appendChild(scroll);
+  wrap.appendChild(rightArr);
+  return { wrap, scroll };
+}
+
+// ── Helper: build time bar + play/pause ──
+function buildTimeBar() {
+  const w = document.createElement('div');
+  w.className = 'time-bar-wrap';
+  const btn = document.createElement('button');
+  btn.className = 'play-btn'; btn.innerHTML = '⏸';
+  const slider = document.createElement('input');
+  slider.type = 'range'; slider.className = 'time-bar'; slider.min=0; slider.max=1000; slider.value=0;
+  const lbl = document.createElement('span');
+  lbl.className = 'time-label'; lbl.textContent = '0:00 / 0:00';
+  w.appendChild(btn); w.appendChild(slider); w.appendChild(lbl);
+  return { wrap: w, btn, slider, lbl };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MANIPULATION PANEL  (videos stacked vertically: GT / Nominal / Steered)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildManipPanel(task, evals) {
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'panel-header';
+  const emoji = TASK_EMOJI[task] || '';
+  hdr.innerHTML = `${emoji} ${taskDisplayName(task)}`;
+  panel.appendChild(hdr);
+
+  // Task text
+  const tt = document.createElement('div');
+  tt.className = 'task-text'; tt.textContent = 'Loading…';
+  panel.appendChild(tt);
+  loadText(`manipulation/${task}/task.txt`, tt);
+
+  // Videos — vertical stack
+  const va = document.createElement('div');
+  va.className = 'video-area vertical';
+  const vids = ['gt','base','pessimistic'].map(type => {
+    const c = document.createElement('div');
+    c.className = 'video-container';
+    const v = document.createElement('video');
+    v.muted=true; v.playsInline=true; v.preload='auto';
+    c.appendChild(v);
+    const l = document.createElement('div');
+    l.className = 'vid-label';
+    l.textContent = type==='gt'?'Ground Truth':type==='base'?'Nominal':'Steered';
+    c.appendChild(l);
+    va.appendChild(c);
+    return {container:c, video:v, label:l};
+  });
+  panel.appendChild(va);
+
+  // Time bar
+  const tb = buildTimeBar();
+  panel.appendChild(tb.wrap);
+
+  let paused=false, seeking=false;
+  const master = vids[0].video;
+  // Stop all when master ends
+  master.addEventListener('ended',()=>{
+    paused=true; tb.btn.innerHTML='▶';
+    vids.forEach(({video:v})=>v.pause());
+    if(master.duration){ tb.slider.value=1000; tb.lbl.textContent=fmt(master.duration)+' / '+fmt(master.duration); }
+  });
+  master.addEventListener('timeupdate',()=>{
+    if(seeking) return;
+    vids.slice(1).forEach(({video:v})=>{ if(Math.abs(v.currentTime-master.currentTime)>0.15) v.currentTime=master.currentTime; });
+    if(master.duration){ tb.slider.value=(master.currentTime/master.duration)*1000; tb.lbl.textContent=fmt(master.currentTime)+' / '+fmt(master.duration); }
+  });
+  tb.slider.addEventListener('input',()=>{ seeking=true; const t=(tb.slider.value/1000)*master.duration; vids.forEach(({video:v})=>{v.currentTime=t;}); });
+  tb.slider.addEventListener('change',()=>{ seeking=false; });
+  tb.btn.addEventListener('click',()=>{
+    paused=!paused;
+    if(paused){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML='▶'; }
+    else {
+      // If ended, restart from beginning
+      if(master.ended){ vids.forEach(({video:v})=>{v.currentTime=0;}); }
+      vids.forEach(({video:v})=>v.play().catch(()=>{})); tb.btn.innerHTML='⏸';
+    }
+  });
+
+  // Thumbnail gallery (sliding)
+  const gal = buildThumbGallery('Runs');
+  let thumbBtns = [];
+
+  function loadEval(name) {
+    thumbBtns.forEach(b=>b.classList.toggle('active',b.dataset.e===name));
+    const safe = isSafe(name);
+    vids[0].video.src = `manipulation/${task}/${name}/gt.mp4`;
+    vids[1].video.src = `manipulation/${task}/${name}/base.mp4`;
+    vids[2].video.src = `manipulation/${task}/${name}/pessimistic.mp4`;
+    // label colors
+    vids.forEach(({container:c})=>c.classList.remove('safe-label','fail-label'));
+    if(safe){
+      vids[1].container.classList.add('safe-label');
+      vids[2].container.classList.add('safe-label');
+    } else {
+      vids[1].container.classList.add('safe-label');
+      vids[2].container.classList.add('fail-label');
+    }
+    let rdy=0;
+    vids.forEach(({video:v})=>{
+      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===3){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!paused) vids.forEach(({video:vv})=>vv.play().catch(()=>{})); }}, {once:true});
+    });
+  }
+
+  evals.forEach(name=>{
+    const btn = document.createElement('div');
+    btn.className = 'thumb-btn'; btn.dataset.e = name;
+    if(isSafe(name)) btn.classList.add('safe-thumb'); else btn.classList.add('fail-thumb');
+    const cvs = document.createElement('canvas');
+    captureLastFrame(`manipulation/${task}/${name}/gt.mp4`, cvs);
+    btn.appendChild(cvs);
+    const lb = document.createElement('div');
+    lb.className = 'thumb-name'; lb.textContent = name.replace('eval_','#').replace('_safe','');
+    btn.appendChild(lb);
+    btn.addEventListener('click',()=>loadEval(name));
+    gal.scroll.appendChild(btn);
+    thumbBtns.push(btn);
+  });
+
+  panel.appendChild(gal.wrap);
+  loadEval(evals[0]);
+  return panel;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DRIVING UNCONDITIONAL  (videos side-by-side horizontally)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildDrivingUncondPanel() {
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'panel-header';
+  hdr.textContent = 'Unconditional Steering';
+  panel.appendChild(hdr);
+
+  const tt = document.createElement('div');
+  tt.className = 'task-text'; tt.textContent = 'Loading…';
+  panel.appendChild(tt);
+
+  // Videos — horizontal
+  const va = document.createElement('div');
+  va.className = 'video-area'; // default flex row = horizontal
+  const vids = ['initial','pessimistic'].map(type=>{
+    const c = document.createElement('div');
+    c.className = 'video-container';
+    const v = document.createElement('video');
+    v.muted=true; v.playsInline=true; v.preload='auto';
+    c.appendChild(v);
+    const l = document.createElement('div');
+    l.className = 'vid-label';
+    l.textContent = type==='initial'?'Nominal':'Steered';
+    c.appendChild(l);
+    va.appendChild(c);
+    return {container:c, video:v};
+  });
+  panel.appendChild(va);
+
+  const tb = buildTimeBar();
+  panel.appendChild(tb.wrap);
+
+  let paused=false, seeking=false;
+  const master = vids[0].video;
+  master.addEventListener('ended',()=>{
+    paused=true; tb.btn.innerHTML='▶';
+    vids.forEach(({video:v})=>v.pause());
+    if(master.duration){ tb.slider.value=1000; tb.lbl.textContent=fmt(master.duration)+' / '+fmt(master.duration); }
+  });
+  master.addEventListener('timeupdate',()=>{
+    if(seeking) return;
+    const v2=vids[1].video;
+    if(Math.abs(v2.currentTime-master.currentTime)>0.15) v2.currentTime=master.currentTime;
+    if(master.duration){ tb.slider.value=(master.currentTime/master.duration)*1000; tb.lbl.textContent=fmt(master.currentTime)+' / '+fmt(master.duration); }
+  });
+  tb.slider.addEventListener('input',()=>{ seeking=true; const t=(tb.slider.value/1000)*master.duration; vids.forEach(({video:v})=>{v.currentTime=t;}); });
+  tb.slider.addEventListener('change',()=>{ seeking=false; });
+  tb.btn.addEventListener('click',()=>{
+    paused=!paused;
+    if(paused){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML='▶'; }
+    else {
+      if(master.ended){ vids.forEach(({video:v})=>{v.currentTime=0;}); }
+      vids.forEach(({video:v})=>v.play().catch(()=>{})); tb.btn.innerHTML='⏸';
+    }
+  });
+
+  const gal = buildThumbGallery('Scenarios');
+  let thumbBtns = [];
+
+  function loadSc(sc) {
+    thumbBtns.forEach(b=>b.classList.toggle('active',b.dataset.sc===sc));
+    loadText(`${DRIVING_UNCOND_ROOT}/${sc}/task.txt`, tt, `${DRIVING_UNCOND_ROOT}/${sc}`);
+    vids[0].video.src = `${DRIVING_UNCOND_ROOT}/${sc}/initial.mp4`;
+    vids[1].video.src = `${DRIVING_UNCOND_ROOT}/${sc}/pessimistic.mp4`;
+    let rdy=0;
+    vids.forEach(({video:v})=>{
+      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===2){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!paused) vids.forEach(({video:vv})=>vv.play().catch(()=>{})); }},{once:true});
+    });
+  }
+
+  DRIVING_UNCOND.forEach(sc=>{
+    const btn = document.createElement('div');
+    btn.className = 'thumb-btn'; btn.dataset.sc = sc;
+    const cvs = document.createElement('canvas');
+    captureLastFrame(`${DRIVING_UNCOND_ROOT}/${sc}/initial.mp4`, cvs);
+    btn.appendChild(cvs);
+      const lb = document.createElement('div');
+      lb.className = 'thumb-name'; lb.textContent = taskDisplayName(sc);
+    btn.appendChild(lb);
+    btn.addEventListener('click',()=>loadSc(sc));
+    gal.scroll.appendChild(btn);
+    thumbBtns.push(btn);
+  });
+
+  panel.appendChild(gal.wrap);
+  loadSc(DRIVING_UNCOND[0]);
+  return panel;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DRIVING CONDITIONAL  (videos side-by-side + action buttons)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildDrivingCondPanel() {
+  const scenarios = Object.keys(DRIVING_COND);
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'panel-header';
+  hdr.textContent = 'Conditional Steering';
+  panel.appendChild(hdr);
+
+  const tt = document.createElement('div');
+  tt.className = 'task-text'; tt.textContent = 'Loading…';
+  panel.appendChild(tt);
+
+  // Videos — horizontal
+  const va = document.createElement('div');
+  va.className = 'video-area';
+  const vids = ['initial','pessimistic'].map(type=>{
+    const c = document.createElement('div');
+    c.className = 'video-container';
+    const v = document.createElement('video');
+    v.muted=true; v.playsInline=true; v.preload='auto';
+    c.appendChild(v);
+    const l = document.createElement('div');
+    l.className = 'vid-label';
+    l.textContent = type==='initial'?'Nominal':'Steered';
+    c.appendChild(l);
+    va.appendChild(c);
+    return {container:c, video:v};
+  });
+  panel.appendChild(va);
+
+  const tb = buildTimeBar();
+  panel.appendChild(tb.wrap);
+
+  let paused=false, seeking=false;
+  const master = vids[0].video;
+  master.addEventListener('ended',()=>{
+    paused=true; tb.btn.innerHTML='▶';
+    vids.forEach(({video:v})=>v.pause());
+    if(master.duration){ tb.slider.value=1000; tb.lbl.textContent=fmt(master.duration)+' / '+fmt(master.duration); }
+  });
+  master.addEventListener('timeupdate',()=>{
+    if(seeking) return;
+    if(Math.abs(vids[1].video.currentTime-master.currentTime)>0.15) vids[1].video.currentTime=master.currentTime;
+    if(master.duration){ tb.slider.value=(master.currentTime/master.duration)*1000; tb.lbl.textContent=fmt(master.currentTime)+' / '+fmt(master.duration); }
+  });
+  tb.slider.addEventListener('input',()=>{ seeking=true; const t=(tb.slider.value/1000)*master.duration; vids.forEach(({video:v})=>{v.currentTime=t;}); });
+  tb.slider.addEventListener('change',()=>{ seeking=false; });
+  tb.btn.addEventListener('click',()=>{
+    paused=!paused;
+    if(paused){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML='▶'; }
+    else {
+      if(master.ended){ vids.forEach(({video:v})=>{v.currentTime=0;}); }
+      vids.forEach(({video:v})=>v.play().catch(()=>{})); tb.btn.innerHTML='⏸';
+    }
+  });
+
+  // Scenario thumbnails
+  const gal = buildThumbGallery('Scenarios');
+  let scenarioThumbs = [];
+
+  // Action buttons
+  const actStrip = document.createElement('div');
+  actStrip.className = 'action-strip';
+  const actLbl = document.createElement('span');
+  actLbl.className = 'action-strip-label'; actLbl.textContent = 'Actions:';
+  actStrip.appendChild(actLbl);
+
+  function loadVideo(sc, action) {
+    const safe = isSafe(action);
+    const fbKey = `${DRIVING_COND_ROOT}/${sc}`;
+    loadText(
+      [
+        `${DRIVING_COND_ROOT}/${sc}/task.txt`,
+        `${DRIVING_COND_ROOT}/${sc}/${action}/task.txt`
+      ],
+      tt,
+      fbKey
+    );
+    vids[0].video.src = `${DRIVING_COND_ROOT}/${sc}/${action}/initial.mp4`;
+    vids[1].video.src = `${DRIVING_COND_ROOT}/${sc}/${action}/pessimistic.mp4`;
+    vids.forEach(({container:c})=>c.classList.remove('safe-label','fail-label'));
+    if(safe){
+      vids[0].container.classList.add('safe-label');
+      vids[1].container.classList.add('safe-label');
+    } else {
+      vids[1].container.classList.add('fail-label');
+    }
+    actStrip.querySelectorAll('.action-btn').forEach(b=>b.classList.toggle('active',b.dataset.a===action));
+    let rdy=0;
+    vids.forEach(({video:v})=>{
+      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===2){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!paused) vids.forEach(({video:vv})=>vv.play().catch(()=>{})); }},{once:true});
+    });
+  }
+
+  function loadScenario(sc) {
+    scenarioThumbs.forEach(b=>b.classList.toggle('active',b.dataset.sc===sc));
+    // Rebuild actions
+    while(actStrip.children.length>1) actStrip.removeChild(actStrip.lastChild);
+    DRIVING_COND[sc].forEach(action=>{
+      const b = document.createElement('button');
+      b.className = 'action-btn'; b.dataset.a = action;
+      if(isSafe(action)) b.classList.add('safe-action'); else b.classList.add('fail-action');
+      b.textContent = action.replace(/_safe$/,'').replace(/_/g,' ');
+      if(isSafe(action)) b.textContent += ' ✓';
+      b.addEventListener('click',()=>loadVideo(sc,action));
+      actStrip.appendChild(b);
+    });
+    loadVideo(sc, DRIVING_COND[sc][0]);
+  }
+
+  scenarios.forEach(sc=>{
+    const btn = document.createElement('div');
+    btn.className = 'thumb-btn'; btn.dataset.sc = sc;
+    const firstAct = DRIVING_COND[sc][0];
+    const cvs = document.createElement('canvas');
+    captureLastFrame(`${DRIVING_COND_ROOT}/${sc}/${firstAct}/initial.mp4`, cvs);
+    btn.appendChild(cvs);
+    const lb = document.createElement('div');
+    lb.className = 'thumb-name'; lb.textContent = taskDisplayName(sc);
+    btn.appendChild(lb);
+    btn.addEventListener('click',()=>loadScenario(sc));
+    gal.scroll.appendChild(btn);
+    scenarioThumbs.push(btn);
+  });
+
+  panel.appendChild(gal.wrap);
+  panel.appendChild(actStrip);
+  loadScenario(scenarios[0]);
+  return panel;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Quantitative plot colors & labels (Chart.js)
+// ══════════════════════════════════════════════════════════════════════════════
+const BAR_COLORS = { nominal: '#0091ff', 'best-of-n': '#0048a6', steered: '#ff9500' };
+const METHOD_DISPLAY = {
+  nominal: 'Noimanal (N=1)',
+  'best-of-n': 'Best-of-N (N=20)',
+  steered: 'Steered (Ours)'
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INLINE QUANTITATIVE DATA
+// ══════════════════════════════════════════════════════════════════════════════
+const FAILURE_DATA = {"methods":["nominal","best-of-n","ours (pessimistic)"],"colors":{"nominal":"#0091ff","best-of-n":"#0048a6","ours (pessimistic)":"#ff9500"},"tasks":{"candy coffee":{"gt_failure":{"nominal":{"p":0.4118,"lo":0.1112,"hi":0.121},"best-of-n":{"p":0.7059,"lo":0.1194,"hi":0.0966},"ours (pessimistic)":{"p":1.0,"lo":0.0556,"hi":0.0}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0417},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.0417},"ours (pessimistic)":{"p":0.1304,"lo":0.0551,"hi":0.0858}}},"candy gummy":{"gt_failure":{"nominal":{"p":0.2857,"lo":0.1032,"hi":0.1318},"best-of-n":{"p":0.5,"lo":0.1291,"hi":0.1291},"ours (pessimistic)":{"p":0.7143,"lo":0.1318,"hi":0.1032}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.037},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.037},"ours (pessimistic)":{"p":0.0,"lo":0.0,"hi":0.037}}},"Coffee":{"gt_failure":{"nominal":{"p":0.8,"lo":0.1509,"hi":0.0964},"best-of-n":{"p":1.0,"lo":0.0909,"hi":0.0},"ours (pessimistic)":{"p":1.0,"lo":0.0909,"hi":0.0}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0833},"best-of-n":{"p":0.0909,"lo":0.0556,"hi":0.1238},"ours (pessimistic)":{"p":0.4545,"lo":0.14,"hi":0.1476}}},"Jenga":{"gt_failure":{"nominal":{"p":0.4545,"lo":0.1019,"hi":0.1058},"best-of-n":{"p":0.5909,"lo":0.1065,"hi":0.0986},"ours (pessimistic)":{"p":0.9545,"lo":0.0675,"hi":0.028}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0714},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.0714},"ours (pessimistic)":{"p":0.1538,"lo":0.0748,"hi":0.1243}}},"Knife":{"gt_failure":{"nominal":{"p":0.8,"lo":0.1205,"hi":0.083},"best-of-n":{"p":0.9333,"lo":0.0951,"hi":0.0409},"ours (pessimistic)":{"p":1.0,"lo":0.0625,"hi":0.0}},"gt_success":{"nominal":{"p":0.125,"lo":0.0762,"hi":0.1595},"best-of-n":{"p":0.25,"lo":0.1192,"hi":0.1748},"ours (pessimistic)":{"p":0.5,"lo":0.1667,"hi":0.1667}}},"Pickup":{"gt_failure":{"nominal":{"p":0.6111,"lo":0.1178,"hi":0.1061},"best-of-n":{"p":0.6667,"lo":0.1173,"hi":0.0997},"ours (pessimistic)":{"p":0.9444,"lo":0.0809,"hi":0.0341}},"gt_success":{"nominal":{"p":0.125,"lo":0.0528,"hi":0.0828},"best-of-n":{"p":0.1667,"lo":0.0624,"hi":0.0891},"ours (pessimistic)":{"p":0.3333,"lo":0.0878,"hi":0.1012}}}}};
+
+const OPTIM_DATA = {"tasks":["jenga","knife","coffee","pickup","candy_gummy","candy_coffee"],"reward_keys":["robometer_progress","robometer_success_prob","topreward","rewind","qwen","classifier_failure"],"settings":[{"key":"mean_base","label":"base","color":"#0048a6"},{"key":"final_optim","label":"optim","color":"#ff9500"},{"key":"final_base","label":"nominal","color":"#0091ff"}],"qwen_flip_tasks":["candy_coffee","knife","candy_gummy","coffee"],"data":{"robometer_progress":{"jenga":{"base":{"mean":0.525459,"stderr":0.00311,"n":180},"optim":{"mean":0.503563,"stderr":0.006358,"n":36},"nominal":{"mean":0.546079,"stderr":0.006415,"n":36}},"knife":{"base":{"mean":0.343155,"stderr":0.006885,"n":115},"optim":{"mean":0.312358,"stderr":0.014248,"n":23},"nominal":{"mean":0.372316,"stderr":0.015744,"n":23}},"coffee":{"base":{"mean":0.522315,"stderr":0.007421,"n":105},"optim":{"mean":0.495722,"stderr":0.015721,"n":21},"nominal":{"mean":0.550285,"stderr":0.015258,"n":21}},"pickup":{"base":{"mean":0.392423,"stderr":0.004269,"n":210},"optim":{"mean":0.360367,"stderr":0.008377,"n":42},"nominal":{"mean":0.419596,"stderr":0.008461,"n":42}},"candy_gummy":{"base":{"mean":0.496632,"stderr":0.003299,"n":200},"optim":{"mean":0.462484,"stderr":0.006008,"n":40},"nominal":{"mean":0.517993,"stderr":0.006795,"n":40}},"candy_coffee":{"base":{"mean":0.471963,"stderr":0.003404,"n":200},"optim":{"mean":0.417424,"stderr":0.006783,"n":40},"nominal":{"mean":0.495524,"stderr":0.006626,"n":40}}},"robometer_success_prob":{"jenga":{"base":{"mean":0.060928,"stderr":0.001674,"n":180},"optim":{"mean":0.044916,"stderr":0.002754,"n":36},"nominal":{"mean":0.074744,"stderr":0.003975,"n":36}},"knife":{"base":{"mean":0.028665,"stderr":0.001069,"n":115},"optim":{"mean":0.022717,"stderr":0.001193,"n":23},"nominal":{"mean":0.03591,"stderr":0.002865,"n":23}},"coffee":{"base":{"mean":0.100764,"stderr":0.007998,"n":105},"optim":{"mean":0.077769,"stderr":0.014672,"n":21},"nominal":{"mean":0.125137,"stderr":0.018143,"n":21}},"pickup":{"base":{"mean":0.052629,"stderr":0.001322,"n":210},"optim":{"mean":0.039552,"stderr":0.001791,"n":42},"nominal":{"mean":0.065207,"stderr":0.00327,"n":42}},"candy_gummy":{"base":{"mean":0.062434,"stderr":0.001496,"n":200},"optim":{"mean":0.045142,"stderr":0.001976,"n":40},"nominal":{"mean":0.076073,"stderr":0.003638,"n":40}},"candy_coffee":{"base":{"mean":0.048509,"stderr":0.001352,"n":200},"optim":{"mean":0.032998,"stderr":0.001795,"n":40},"nominal":{"mean":0.058783,"stderr":0.003286,"n":40}}},"topreward":{"jenga":{"base":{"mean":-11.836206,"stderr":0.013282,"n":180},"optim":{"mean":-11.960511,"stderr":0.024556,"n":36},"nominal":{"mean":-11.708343,"stderr":0.030351,"n":36}},"knife":{"base":{"mean":-10.247053,"stderr":0.018588,"n":115},"optim":{"mean":-10.420551,"stderr":0.028368,"n":23},"nominal":{"mean":-10.107385,"stderr":0.039893,"n":23}},"coffee":{"base":{"mean":-10.469977,"stderr":0.040566,"n":105},"optim":{"mean":-10.72324,"stderr":0.07328,"n":21},"nominal":{"mean":-10.229957,"stderr":0.089759,"n":21}},"pickup":{"base":{"mean":-9.952154,"stderr":0.020048,"n":210},"optim":{"mean":-10.28428,"stderr":0.037539,"n":42},"nominal":{"mean":-9.769429,"stderr":0.040542,"n":42}},"candy_gummy":{"base":{"mean":-10.197777,"stderr":0.02008,"n":200},"optim":{"mean":-10.337537,"stderr":0.042391,"n":40},"nominal":{"mean":-10.053955,"stderr":0.043887,"n":40}},"candy_coffee":{"base":{"mean":-10.491048,"stderr":0.019392,"n":200},"optim":{"mean":-10.61917,"stderr":0.038394,"n":40},"nominal":{"mean":-10.326211,"stderr":0.045287,"n":40}}},"rewind":{"jenga":{"base":{"mean":0.304307,"stderr":0.003108,"n":180},"optim":{"mean":0.289474,"stderr":0.00541,"n":36},"nominal":{"mean":0.330581,"stderr":0.006372,"n":36}},"knife":{"base":{"mean":0.322414,"stderr":0.004925,"n":115},"optim":{"mean":0.292483,"stderr":0.011662,"n":23},"nominal":{"mean":0.348303,"stderr":0.010176,"n":23}},"coffee":{"base":{"mean":0.337054,"stderr":0.005277,"n":105},"optim":{"mean":0.297479,"stderr":0.010141,"n":21},"nominal":{"mean":0.3615,"stderr":0.011309,"n":21}},"pickup":{"base":{"mean":0.295119,"stderr":0.003589,"n":210},"optim":{"mean":0.250572,"stderr":0.006592,"n":42},"nominal":{"mean":0.326899,"stderr":0.007514,"n":42}},"candy_gummy":{"base":{"mean":0.407911,"stderr":0.005067,"n":200},"optim":{"mean":0.364323,"stderr":0.010075,"n":40},"nominal":{"mean":0.43581,"stderr":0.011328,"n":40}},"candy_coffee":{"base":{"mean":0.21139,"stderr":0.003173,"n":200},"optim":{"mean":0.16611,"stderr":0.00589,"n":40},"nominal":{"mean":0.243898,"stderr":0.005995,"n":40}}},"qwen":{"jenga":{"base":{"mean":1.986806,"stderr":0.304618,"n":180},"optim":{"mean":-11.999132,"stderr":0.765372,"n":36},"nominal":{"mean":3.869792,"stderr":0.534311,"n":36}},"knife":{"base":{"mean":1.804348,"stderr":0.162357,"n":115},"optim":{"mean":-0.404891,"stderr":0.481513,"n":23},"nominal":{"mean":0.903533,"stderr":0.31115,"n":23}},"coffee":{"base":{"mean":-0.23006,"stderr":0.725167,"n":105},"optim":{"mean":-4.78869,"stderr":1.419933,"n":21},"nominal":{"mean":-2.758929,"stderr":1.565681,"n":21}},"pickup":{"base":{"mean":5.326935,"stderr":0.101202,"n":210},"optim":{"mean":-1.469494,"stderr":0.351201,"n":42},"nominal":{"mean":6.506696,"stderr":0.205795,"n":42}},"candy_gummy":{"base":{"mean":5.311875,"stderr":0.09911,"n":200},"optim":{"mean":-6.857031,"stderr":0.499187,"n":40},"nominal":{"mean":4.290625,"stderr":0.209017,"n":40}},"candy_coffee":{"base":{"mean":6.503125,"stderr":0.440989,"n":200},"optim":{"mean":-2.014844,"stderr":0.762472,"n":40},"nominal":{"mean":3.666406,"stderr":1.035867,"n":40}}},"classifier_failure":{"jenga":{"base":{"mean":0.217237,"stderr":0.024505,"n":180},"optim":{"mean":0.12856,"stderr":0.040293,"n":36},"nominal":{"mean":0.32766,"stderr":0.061667,"n":36}},"knife":{"base":{"mean":0.680945,"stderr":0.03561,"n":115},"optim":{"mean":0.524649,"stderr":0.084955,"n":23},"nominal":{"mean":0.758971,"stderr":0.072522,"n":23}},"coffee":{"base":{"mean":0.455513,"stderr":0.04108,"n":105},"optim":{"mean":0.366907,"stderr":0.091108,"n":21},"nominal":{"mean":0.613412,"stderr":0.095299,"n":21}},"pickup":{"base":{"mean":0.122656,"stderr":0.018368,"n":210},"optim":{"mean":0.092477,"stderr":0.040682,"n":42},"nominal":{"mean":0.191344,"stderr":0.048701,"n":42}},"candy_gummy":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}},"candy_coffee":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}}}}};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FAILURE DETECTION CHARTS (all 6 tasks)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildFailureDetection(container) {
+  const { tasks } = FAILURE_DATA;
+  const taskOrder = ['jenga', 'knife', 'coffee', 'pickup', 'candy_gummy', 'candy_coffee'];
+  const normalizeTaskKey = (name) => name.toLowerCase().replace(/\s+/g, '_');
+  const taskNames = taskOrder
+    .map(k => Object.keys(tasks).find(name => normalizeTaskKey(name) === k))
+    .filter(Boolean);
+  const orderedMethods = ['nominal', 'best-of-n', 'steered'];
+  const methodMap = {
+    nominal: 'nominal',
+    'best-of-n': 'best-of-n',
+    steered: 'ours (pessimistic)'
+  };
+  const emojiByTaskKey = {
+    candy_coffee: TASK_EMOJI.candy_coffee || '',
+    candy_gummy: TASK_EMOJI.candy_gummy || TASK_EMOJI.gummy || '',
+    coffee: TASK_EMOJI.coffee || '',
+    jenga: TASK_EMOJI.jenga || '',
+    knife: TASK_EMOJI.knife || '',
+    pickup: TASK_EMOJI.pickup || ''
+  };
+
+  const legend = document.createElement('div');
+  legend.className = 'chart-legend';
+  orderedMethods.forEach(m => {
+    const it = document.createElement('div');
+    it.className = 'chart-legend-item';
+    it.innerHTML = `<div class="chart-legend-swatch" style="background:${BAR_COLORS[m]}"></div>${METHOD_DISPLAY[m] || m}`;
+    legend.appendChild(it);
+  });
+  container.appendChild(legend);
+
+  const viewSelector = document.createElement('div');
+  viewSelector.className = 'task-selector';
+  container.appendChild(viewSelector);
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const h3 = document.createElement('h3');
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-wrap';
+  const canvas = document.createElement('canvas');
+  wrap.appendChild(canvas);
+  card.appendChild(h3);
+  card.appendChild(wrap);
+  container.appendChild(card);
+
+  const errorBarPlugin = {
+    id: 'errorBar',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((ds, di) => {
+        if (!ds.errLo || !ds.errHi) return;
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach((bar, i) => {
+          const val = ds.data[i];
+          if (val == null || isNaN(val)) return;
+          const lo = ds.errLo[i] || 0;
+          const hi = ds.errHi[i] || 0;
+          const x = bar.x;
+          const yTop = chart.scales.y.getPixelForValue(val + hi);
+          const yBot = chart.scales.y.getPixelForValue(val - lo);
+          const cap = 4;
+          ctx.save();
+          ctx.strokeStyle = ds.borderColor;
+          ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(x, yTop); ctx.lineTo(x, yBot); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x - cap, yTop); ctx.lineTo(x + cap, yTop); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x - cap, yBot); ctx.lineTo(x + cap, yBot); ctx.stroke();
+          ctx.restore();
+        });
+      });
+    }
+  };
+  if (!Chart.registry.plugins.get('errorBar')) Chart.register(errorBarPlugin);
+
+  let chart = null;
+  function renderFailureChart(gtKey) {
+    h3.textContent = gtKey === 'gt_failure'
+      ? 'G.T. Failure (higher = better recall)'
+      : 'G.T. Success (lower = fewer false positives)';
+
+    const datasets = orderedMethods.map(m => {
+      const srcMethod = methodMap[m];
+      return {
+      label: METHOD_DISPLAY[m] || m,
+      data: taskNames.map(t => tasks[t][gtKey]?.[srcMethod]?.p ?? null),
+      errLo: taskNames.map(t => tasks[t][gtKey]?.[srcMethod]?.lo ?? null),
+      errHi: taskNames.map(t => tasks[t][gtKey]?.[srcMethod]?.hi ?? null),
+      backgroundColor: (BAR_COLORS[m] || '#888') + 'cc',
+      borderColor: BAR_COLORS[m] || '#888',
+      borderWidth: 1
+      };
+    });
+
+    const labels = taskNames.map(t => {
+      const em = emojiByTaskKey[normalizeTaskKey(t)] || '';
+      const dn = taskDisplayName(t);
+      return em ? `${em} ${dn}` : dn;
+    });
+
+    if (chart) chart.destroy();
+    chart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label(ctx) {
+                const ds = ctx.dataset;
+                const v = ds.data[ctx.dataIndex];
+                const lo = ds.errLo?.[ctx.dataIndex];
+                const hi = ds.errHi?.[ctx.dataIndex];
+                if (v == null) return `${ds.label}: N/A`;
+                return `${ds.label}: ${(v * 100).toFixed(1)}% [-${(lo * 100).toFixed(1)}%, +${(hi * 100).toFixed(1)}%]`;
+              }
+            }
+          }
+        },
+        scales: { y: { min: 0, max: 1.0, title: { display: true, text: 'proportion classified as failure' } } }
+      }
+    });
+  }
+
+  function makeViewButton(label, key, active = false) {
+    const btn = document.createElement('button');
+    btn.className = 'task-sel-btn';
+    if (active) btn.classList.add('active');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      viewSelector.querySelectorAll('.task-sel-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderFailureChart(key);
+    });
+    viewSelector.appendChild(btn);
+  }
+
+  makeViewButton('G.T. Failure', 'gt_failure', true);
+  makeViewButton('G.T. Success', 'gt_success', false);
+  renderFailureChart('gt_failure');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REWARD FUNCTION CHARTS (per-task with selector)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildRewardCharts(container) {
+  const data = OPTIM_DATA;
+  const orderedMethods = ['nominal', 'best-of-n', 'steered'];
+  const methodToDataKey = { nominal: 'nominal', 'best-of-n': 'base', steered: 'optim' };
+
+  const legend = document.createElement('div');
+  legend.className = 'chart-legend';
+  orderedMethods.forEach(m => {
+    const it = document.createElement('div');
+    it.className = 'chart-legend-item';
+    it.innerHTML = `<div class="chart-legend-swatch" style="background:${BAR_COLORS[m]}"></div>${METHOD_DISPLAY[m] || m}`;
+    legend.appendChild(it);
+  });
+  container.appendChild(legend);
+
+  const rewardRow = document.createElement('div');
+  rewardRow.className = 'reward-selector';
+  const rwLabel = document.createElement('label');
+  rwLabel.textContent = 'Reward:';
+  const rwSelect = document.createElement('select');
+  data.reward_keys.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k.replace(/_/g, ' ');
+    rwSelect.appendChild(opt);
+  });
+  rewardRow.appendChild(rwLabel);
+  rewardRow.appendChild(rwSelect);
+  container.appendChild(rewardRow);
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const h3 = document.createElement('h3');
+  h3.textContent = 'Across all tasks';
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-wrap';
+  const canvas = document.createElement('canvas');
+  wrap.appendChild(canvas);
+  card.appendChild(h3);
+  card.appendChild(wrap);
+  container.appendChild(card);
+
+  let chart = null;
+  function renderChart() {
+    const rk = rwSelect.value;
+    const rewardData = data.data[rk] || {};
+    const labels = data.tasks.map(t => (TASK_EMOJI[t] || '') + ' ' + taskDisplayName(t));
+    const datasets = orderedMethods.map(m => {
+      const dk = methodToDataKey[m];
+      return {
+      label: METHOD_DISPLAY[m] || m,
+      data: data.tasks.map(t => rewardData[t]?.[dk]?.mean ?? null),
+      errLo: data.tasks.map(t => rewardData[t]?.[dk]?.stderr ?? null),
+      errHi: data.tasks.map(t => rewardData[t]?.[dk]?.stderr ?? null),
+      backgroundColor: BAR_COLORS[m] + 'cc',
+      borderColor: BAR_COLORS[m],
+      borderWidth: 1
+      };
+    });
+
+    const extents = [];
+    datasets.forEach(ds => {
+      ds.data.forEach((v, i) => {
+        if (v == null) return;
+        const err = ds.errHi[i] || 0;
+        extents.push(v - err, v + err);
+      });
+    });
+    const minV = extents.length ? Math.min(...extents) : -1;
+    const maxV = extents.length ? Math.max(...extents) : 1;
+    const pad = (maxV - minV) * 0.15 || 0.1;
+
+    if (chart) chart.destroy();
+    chart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { min: minV - pad, max: maxV + pad, title: { display: true, text: rk.replace(/_/g, ' ') } } }
+      }
+    });
+  }
+
+  rwSelect.addEventListener('change', renderChart);
+  renderChart();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BUILD PAGE  — all sections on one scrolling page
+// ══════════════════════════════════════════════════════════════════════════════
+function build() {
+  const root = document.getElementById('content');
+
+  // ── Manipulation (with task selector) ──
+  const s1 = document.createElement('div');
+  s1.className = 'section'; s1.id = 'manipulation';
+  s1.innerHTML = `<h2 class="section-title">Manipulation</h2>
+    <p class="section-subtitle">Comparison of ground-truth, nominal, and steered rollouts for robotic manipulation tasks (using <a href="https://ctrl-world.github.io/" target="_blank" rel="noopener noreferrer">Ctrl-World</a>).</p>`;
+
+  // Task selector buttons
+  const taskSel = document.createElement('div');
+  taskSel.className = 'task-selector';
+  s1.appendChild(taskSel);
+
+  // Build all panels (hidden by default)
+  const panels = {};
+  const taskKeys = Object.keys(MANIPULATION);
+  taskKeys.forEach(task => {
+    const p = buildManipPanel(task, MANIPULATION[task]);
+    p.style.display = 'none';
+    panels[task] = p;
+    s1.appendChild(p);
+  });
+
+  function selectTask(task) {
+    taskKeys.forEach(t => { panels[t].style.display = t === task ? '' : 'none'; });
+    taskSel.querySelectorAll('.task-sel-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.task === task)
+    );
+    // Pause videos in hidden panels
+    taskKeys.forEach(t => {
+      if (t !== task) panels[t].querySelectorAll('video').forEach(v => v.pause());
+    });
+  }
+
+  taskKeys.forEach(task => {
+    const btn = document.createElement('button');
+    btn.className = 'task-sel-btn'; btn.dataset.task = task;
+    btn.textContent = (TASK_EMOJI[task] || '') + ' ' + taskDisplayName(task);
+    btn.addEventListener('click', () => selectTask(task));
+    taskSel.appendChild(btn);
+  });
+
+  // Show first task
+  selectTask(taskKeys[0]);
+  root.appendChild(s1);
+
+  // ── Quantitative Results ──
+  const sq = document.createElement('div');
+  sq.className = 'section'; sq.id = 'quantitative';
+  sq.innerHTML = `<h2 class="section-title">Quantitative Results</h2>
+    <p class="section-subtitle">Failure detection rates and reward comparisons across methods.</p>`;
+
+  const fdTitle = document.createElement('h3');
+  fdTitle.className = 'subsection-title'; fdTitle.textContent = 'Failure Detection';
+  const fdSub = document.createElement('p');
+  fdSub.className = 'subsection-subtitle'; fdSub.textContent = 'Can steering robustly detect failures in the world model imaginations? We conduct open-loop rollout only using the initial image and action trajectories of offline trajectories, and test if pessimistic steering can robustly detect failures in the world model imaginations. Two-panel view: ground-truth failure (detection) and ground-truth success (false positives), matching the quantitative viewer style.';
+  const fdHost = document.createElement('div');
+  sq.appendChild(fdTitle); sq.appendChild(fdSub); sq.appendChild(fdHost);
+  buildFailureDetection(fdHost);
+
+  const rwTitle = document.createElement('h3');
+  rwTitle.className = 'subsection-title'; rwTitle.textContent = 'Reward Function';
+  const rwSub = document.createElement('p');
+  rwSub.className = 'subsection-subtitle'; rwSub.textContent = 'We compare the reward estimates on the generated rollouts. Only Qwen is used for the optimization, while the others are not used during the steering. It shows the rewards of the steered generations are lower than baselines, showing the steering can generate pessimistic rollouts more effectively.';
+  const rwHost = document.createElement('div');
+  sq.appendChild(rwTitle); sq.appendChild(rwSub); sq.appendChild(rwHost);
+  buildRewardCharts(rwHost);
+
+  root.appendChild(sq);
+
+  // ── Driving Unconditional ──
+  const s2 = document.createElement('div');
+  s2.className = 'section'; s2.id = 'driving-unconditional';
+  s2.innerHTML = `<h2 class="section-title">Driving — Unconditional</h2>
+    <p class="section-subtitle">Nominal vs. Pessimistic Steering using <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista world model</a>. Scenes are from <a href="https://huggingface.co/datasets/nexar-ai/nexar_collision_prediction" target="_blank" rel="noopener noreferrer">Nexar Collision Prediction</a> or <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank" rel="noopener noreferrer">PAI (PhysicalAI-Autonomous-Vehicles)</a>.</p>`;
+  s2.appendChild(buildDrivingUncondPanel());
+  root.appendChild(s2);
+
+  // ── Driving Conditional ──
+  const s3 = document.createElement('div');
+  s3.className = 'section'; s3.id = 'driving-conditional';
+  s3.innerHTML = `<h2 class="section-title">Driving — Conditional</h2>
+    <p class="section-subtitle">Nominal vs. Pessimistic Steering using <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista world model</a>, under different action choices per scenario. Scenes are from <a href="https://huggingface.co/datasets/nexar-ai/nexar_collision_prediction" target="_blank" rel="noopener noreferrer">Nexar Collision Prediction</a> or <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank" rel="noopener noreferrer">PAI (PhysicalAI-Autonomous-Vehicles)</a>.</p>`;
+  s3.appendChild(buildDrivingCondPanel());
+  root.appendChild(s3);
+}
+
+// ── Nav highlight on scroll ──
+function setupNav() {
+  const links = document.querySelectorAll('nav a');
+  const ids = Array.from(links).map(a => a.getAttribute('href').slice(1));
+  const onScroll = () => {
+    let current = ids[0];
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= 120) current = id;
+    }
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#'+current));
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+}
+
+build();
+setupNav();
+</script>
+</body>
+</html>

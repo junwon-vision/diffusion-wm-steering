@@ -1,0 +1,1 @@
+Does a left vehicle in the intersection merge into the ego vehicle's lane?

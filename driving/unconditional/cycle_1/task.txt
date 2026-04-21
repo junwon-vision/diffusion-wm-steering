@@ -1,0 +1,1 @@
+Does a cyclist in front of the ego vehicle cross a crossway?
