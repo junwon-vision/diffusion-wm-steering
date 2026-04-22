@@ -679,7 +679,7 @@ function buildManipPanel(task, evals) {
     c.className = 'video-container';
     const v = document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
-    v.setAttribute('muted',''); v.setAttribute('playsinline','');
+    v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('autoplay','');
     c.appendChild(v);
     const l = document.createElement('div');
     l.className = 'vid-label';
@@ -696,6 +696,7 @@ function buildManipPanel(task, evals) {
 
   const pr0 = {v:false}; let seeking=false;
   const master = vids[0].video;
+  master.addEventListener('play', ()=>{ pr0.v=false; tb.btn.innerHTML=BTN_PAUSE; });
   master.addEventListener('ended',()=>{
     pr0.v=true; tb.btn.innerHTML=BTN_PLAY;
     vids.forEach(({video:v})=>v.pause());
@@ -790,7 +791,7 @@ function buildDrivingUncondPanel() {
     c.className = 'video-container';
     const v = document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
-    v.setAttribute('muted',''); v.setAttribute('playsinline','');
+    v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('autoplay','');
     c.appendChild(v);
     const l = document.createElement('div');
     l.className = 'vid-label';
@@ -806,6 +807,7 @@ function buildDrivingUncondPanel() {
 
   const pr1 = {v:false}; let seeking=false;
   const master = vids[0].video;
+  master.addEventListener('play', ()=>{ pr1.v=false; tb.btn.innerHTML=BTN_PAUSE; });
   master.addEventListener('ended',()=>{
     pr1.v=true; tb.btn.innerHTML=BTN_PLAY;
     vids.forEach(({video:v})=>v.pause());
@@ -889,7 +891,7 @@ function buildDrivingCondPanel() {
     c.className = 'video-container';
     const v = document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
-    v.setAttribute('muted',''); v.setAttribute('playsinline','');
+    v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('autoplay','');
     c.appendChild(v);
     const l = document.createElement('div');
     l.className = 'vid-label';
@@ -905,6 +907,7 @@ function buildDrivingCondPanel() {
 
   const pr2 = {v:false}; let seeking=false;
   const master = vids[0].video;
+  master.addEventListener('play', ()=>{ pr2.v=false; tb.btn.innerHTML=BTN_PAUSE; });
   master.addEventListener('ended',()=>{
     pr2.v=true; tb.btn.innerHTML=BTN_PLAY;
     vids.forEach(({video:v})=>v.pause());
@@ -1369,7 +1372,7 @@ function buildStepByStep() {
   const video = document.createElement('video');
   video.style.cssText = 'width:100%;display:block;';
   video.muted = true; video.playsInline = true; video.preload = 'auto';
-  video.setAttribute('muted',''); video.setAttribute('playsinline','');
+  video.setAttribute('muted',''); video.setAttribute('playsinline',''); video.setAttribute('autoplay','');
   videoArea.appendChild(video);
   rightPane.appendChild(videoArea);
 
@@ -1382,6 +1385,7 @@ function buildStepByStep() {
 
   // ── Wire up time bar ──
   const prS = {v:false}; let seeking = false;
+  video.addEventListener('play', () => { prS.v = false; tb.btn.innerHTML = BTN_PAUSE; });
   video.addEventListener('ended', () => {
     prS.v = true; tb.btn.innerHTML = BTN_PLAY;
     if (video.duration) { tb.slider.value = 1000; tb.lbl.textContent = fmt(video.duration) + ' / ' + fmt(video.duration); }
