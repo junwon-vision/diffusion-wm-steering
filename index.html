@@ -601,16 +601,37 @@ function loadText(pathOrPaths, el, fallbackKey) {
 // ── Helper: grab last frame of a video as a canvas ──
 function captureLastFrame(src, canvas) {
   const v = document.createElement('video');
-  v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = src;
+  v.muted = true; v.playsInline = true; v.preload = 'auto';
+  v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('autoplay','');
+  // Must be in the DOM for iOS Safari to allow drawImage
+  v.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+  document.body.appendChild(v);
+
+  let captured = false;
+  function capture() {
+    if (captured || !v.videoWidth) return;
+    captured = true;
+    canvas.width  = v.videoWidth;
+    canvas.height = v.videoHeight;
+    canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
+    v.pause(); v.src = '';
+    if (v.parentNode) v.parentNode.removeChild(v);
+  }
+
+  // Desktop: seek to near the end for a representative frame
   v.addEventListener('loadedmetadata', () => {
     v.currentTime = Math.max(0, v.duration - 0.05);
   });
   v.addEventListener('seeked', () => {
-    canvas.width = v.videoWidth || 160;
-    canvas.height = v.videoHeight || 100;
-    canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
-    v.src = ''; // free resource
+    requestAnimationFrame(() => capture());
   }, { once: true });
+
+  // iOS Safari fallback: capture on the first decoded frame during autoplay
+  v.addEventListener('timeupdate', function h() {
+    if (v.currentTime > 0) { v.removeEventListener('timeupdate', h); capture(); }
+  });
+
+  v.src = src;
 }
 
 // ── Helper: build sliding thumbnail gallery ──
