@@ -719,7 +719,7 @@ function buildManipPanel(task, evals) {
     btn.appendChild(cvs);
     const lb = document.createElement('div');
     lb.className = 'thumb-name';
-    lb.textContent = isSafe(name) ? "Don't Label" : 'Label';
+    lb.textContent = '';
     btn.appendChild(lb);
     btn.addEventListener('click',()=>loadEval(name));
     gal.scroll.appendChild(btn);
