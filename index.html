@@ -310,6 +310,19 @@
       color: var(--text-dim); font-size: 0.82rem;
       border-top: 1px solid var(--border); margin-top: 24px;
     }
+    .footer-name {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+    footer a:hover {
+      border-bottom-color: var(--accent);
+    }
 
     @media (max-width: 700px) {
       .hero h1 { font-size: 1.5rem; }
@@ -346,10 +359,30 @@
 <div class="content" id="content"></div>
 
 <footer>
-  Steering Results Viewer
+  <span class="footer-name">Junwon Seo</span> · Contact:
+  <a href="mailto:junwonse@andrew.cmu.edu">junwonse@andrew.cmu.edu</a> · Website:
+  <a href="https://junwon.me" target="_blank" rel="noopener noreferrer">junwon.me</a>
 </footer>
 
 <script>
+// ── Play/pause SVG icons (avoids emoji rendering quirks on mobile) ──
+const BTN_PLAY  = '<svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor" style="display:block;pointer-events:none"><polygon points="0,0 11,6 0,12"/></svg>';
+const BTN_PAUSE = '<svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" style="display:block;pointer-events:none"><rect x="0" y="0" width="3.5" height="12" rx="1"/><rect x="6.5" y="0" width="3.5" height="12" rx="1"/></svg>';
+
+// Try to play an array of videos; sync btn to actual outcome
+function playAll(videos, tb, pausedRef) {
+  const v0 = Array.isArray(videos) ? videos[0] : videos;
+  const rest = Array.isArray(videos) ? videos.slice(1) : [];
+  v0.play().then(() => {
+    rest.forEach(v => v.play().catch(() => {}));
+    tb.btn.innerHTML = BTN_PAUSE;
+    pausedRef.v = false;
+  }).catch(() => {
+    tb.btn.innerHTML = BTN_PLAY;
+    pausedRef.v = true;
+  });
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════════════════════════════════
@@ -606,7 +639,7 @@ function buildTimeBar() {
   const w = document.createElement('div');
   w.className = 'time-bar-wrap';
   const btn = document.createElement('button');
-  btn.className = 'play-btn'; btn.innerHTML = '⏸';
+  btn.className = 'play-btn'; btn.innerHTML = BTN_PLAY;
   const slider = document.createElement('input');
   slider.type = 'range'; slider.className = 'time-bar'; slider.min=0; slider.max=1000; slider.value=0;
   const lbl = document.createElement('span');
@@ -646,6 +679,7 @@ function buildManipPanel(task, evals) {
     c.className = 'video-container';
     const v = document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
+    v.setAttribute('muted',''); v.setAttribute('playsinline','');
     c.appendChild(v);
     const l = document.createElement('div');
     l.className = 'vid-label';
@@ -660,11 +694,10 @@ function buildManipPanel(task, evals) {
   const tb = buildTimeBar();
   panel.appendChild(tb.wrap);
 
-  let paused=false, seeking=false;
+  const pr0 = {v:false}; let seeking=false;
   const master = vids[0].video;
-  // Stop all when master ends
   master.addEventListener('ended',()=>{
-    paused=true; tb.btn.innerHTML='▶';
+    pr0.v=true; tb.btn.innerHTML=BTN_PLAY;
     vids.forEach(({video:v})=>v.pause());
     if(master.duration){ tb.slider.value=1000; tb.lbl.textContent=fmt(master.duration)+' / '+fmt(master.duration); }
   });
@@ -676,12 +709,11 @@ function buildManipPanel(task, evals) {
   tb.slider.addEventListener('input',()=>{ seeking=true; const t=(tb.slider.value/1000)*master.duration; vids.forEach(({video:v})=>{v.currentTime=t;}); });
   tb.slider.addEventListener('change',()=>{ seeking=false; });
   tb.btn.addEventListener('click',()=>{
-    paused=!paused;
-    if(paused){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML='▶'; }
+    pr0.v=!pr0.v;
+    if(pr0.v){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML=BTN_PLAY; }
     else {
-      // If ended, restart from beginning
       if(master.ended){ vids.forEach(({video:v})=>{v.currentTime=0;}); }
-      vids.forEach(({video:v})=>v.play().catch(()=>{})); tb.btn.innerHTML='⏸';
+      playAll(vids.map(x=>x.video), tb, pr0);
     }
   });
 
@@ -706,7 +738,7 @@ function buildManipPanel(task, evals) {
     }
     let rdy=0;
     vids.forEach(({video:v})=>{
-      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===3){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!paused) vids.forEach(({video:vv})=>vv.play().catch(()=>{})); }}, {once:true});
+      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===3){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!pr0.v) playAll(vids.map(x=>x.video),tb,pr0); }}, {once:true});
     });
   }
 
@@ -758,6 +790,7 @@ function buildDrivingUncondPanel() {
     c.className = 'video-container';
     const v = document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
+    v.setAttribute('muted',''); v.setAttribute('playsinline','');
     c.appendChild(v);
     const l = document.createElement('div');
     l.className = 'vid-label';
@@ -771,10 +804,10 @@ function buildDrivingUncondPanel() {
   const tb = buildTimeBar();
   panel.appendChild(tb.wrap);
 
-  let paused=false, seeking=false;
+  const pr1 = {v:false}; let seeking=false;
   const master = vids[0].video;
   master.addEventListener('ended',()=>{
-    paused=true; tb.btn.innerHTML='▶';
+    pr1.v=true; tb.btn.innerHTML=BTN_PLAY;
     vids.forEach(({video:v})=>v.pause());
     if(master.duration){ tb.slider.value=1000; tb.lbl.textContent=fmt(master.duration)+' / '+fmt(master.duration); }
   });
@@ -787,11 +820,11 @@ function buildDrivingUncondPanel() {
   tb.slider.addEventListener('input',()=>{ seeking=true; const t=(tb.slider.value/1000)*master.duration; vids.forEach(({video:v})=>{v.currentTime=t;}); });
   tb.slider.addEventListener('change',()=>{ seeking=false; });
   tb.btn.addEventListener('click',()=>{
-    paused=!paused;
-    if(paused){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML='▶'; }
+    pr1.v=!pr1.v;
+    if(pr1.v){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML=BTN_PLAY; }
     else {
       if(master.ended){ vids.forEach(({video:v})=>{v.currentTime=0;}); }
-      vids.forEach(({video:v})=>v.play().catch(()=>{})); tb.btn.innerHTML='⏸';
+      playAll(vids.map(x=>x.video), tb, pr1);
     }
   });
 
@@ -805,7 +838,7 @@ function buildDrivingUncondPanel() {
     vids[1].video.src = `${DRIVING_UNCOND_ROOT}/${sc}/pessimistic.mp4`;
     let rdy=0;
     vids.forEach(({video:v})=>{
-      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===2){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!paused) vids.forEach(({video:vv})=>vv.play().catch(()=>{})); }},{once:true});
+      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===2){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!pr1.v) playAll(vids.map(x=>x.video),tb,pr1); }},{once:true});
     });
   }
 
@@ -856,6 +889,7 @@ function buildDrivingCondPanel() {
     c.className = 'video-container';
     const v = document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
+    v.setAttribute('muted',''); v.setAttribute('playsinline','');
     c.appendChild(v);
     const l = document.createElement('div');
     l.className = 'vid-label';
@@ -869,10 +903,10 @@ function buildDrivingCondPanel() {
   const tb = buildTimeBar();
   panel.appendChild(tb.wrap);
 
-  let paused=false, seeking=false;
+  const pr2 = {v:false}; let seeking=false;
   const master = vids[0].video;
   master.addEventListener('ended',()=>{
-    paused=true; tb.btn.innerHTML='▶';
+    pr2.v=true; tb.btn.innerHTML=BTN_PLAY;
     vids.forEach(({video:v})=>v.pause());
     if(master.duration){ tb.slider.value=1000; tb.lbl.textContent=fmt(master.duration)+' / '+fmt(master.duration); }
   });
@@ -884,11 +918,11 @@ function buildDrivingCondPanel() {
   tb.slider.addEventListener('input',()=>{ seeking=true; const t=(tb.slider.value/1000)*master.duration; vids.forEach(({video:v})=>{v.currentTime=t;}); });
   tb.slider.addEventListener('change',()=>{ seeking=false; });
   tb.btn.addEventListener('click',()=>{
-    paused=!paused;
-    if(paused){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML='▶'; }
+    pr2.v=!pr2.v;
+    if(pr2.v){ vids.forEach(({video:v})=>v.pause()); tb.btn.innerHTML=BTN_PLAY; }
     else {
       if(master.ended){ vids.forEach(({video:v})=>{v.currentTime=0;}); }
-      vids.forEach(({video:v})=>v.play().catch(()=>{})); tb.btn.innerHTML='⏸';
+      playAll(vids.map(x=>x.video), tb, pr2);
     }
   });
 
@@ -926,7 +960,7 @@ function buildDrivingCondPanel() {
     actStrip.querySelectorAll('.action-btn').forEach(b=>b.classList.toggle('active',b.dataset.a===action));
     let rdy=0;
     vids.forEach(({video:v})=>{
-      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===2){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!paused) vids.forEach(({video:vv})=>vv.play().catch(()=>{})); }},{once:true});
+      v.addEventListener('canplay',function h(){ v.removeEventListener('canplay',h); rdy++; if(rdy===2){ vids.forEach(({video:vv})=>{vv.currentTime=0;}); if(!pr2.v) playAll(vids.map(x=>x.video),tb,pr2); }},{once:true});
     });
   }
 
@@ -1335,6 +1369,7 @@ function buildStepByStep() {
   const video = document.createElement('video');
   video.style.cssText = 'width:100%;display:block;';
   video.muted = true; video.playsInline = true; video.preload = 'auto';
+  video.setAttribute('muted',''); video.setAttribute('playsinline','');
   videoArea.appendChild(video);
   rightPane.appendChild(videoArea);
 
@@ -1346,9 +1381,9 @@ function buildStepByStep() {
   panel.appendChild(body);
 
   // ── Wire up time bar ──
-  let paused = false, seeking = false;
+  const prS = {v:false}; let seeking = false;
   video.addEventListener('ended', () => {
-    paused = true; tb.btn.innerHTML = '▶';
+    prS.v = true; tb.btn.innerHTML = BTN_PLAY;
     if (video.duration) { tb.slider.value = 1000; tb.lbl.textContent = fmt(video.duration) + ' / ' + fmt(video.duration); }
   });
   video.addEventListener('timeupdate', () => {
@@ -1362,9 +1397,9 @@ function buildStepByStep() {
   });
   tb.slider.addEventListener('change', () => { seeking = false; });
   tb.btn.addEventListener('click', () => {
-    paused = !paused;
-    if (paused) { video.pause(); tb.btn.innerHTML = '▶'; }
-    else { if (video.ended) video.currentTime = 0; video.play().catch(() => {}); tb.btn.innerHTML = '⏸'; }
+    prS.v = !prS.v;
+    if (prS.v) { video.pause(); tb.btn.innerHTML = BTN_PLAY; }
+    else { if (video.ended) video.currentTime = 0; playAll(video, tb, prS); }
   });
 
   // ── Pre-compute orange donut density image ──
@@ -1500,10 +1535,10 @@ function buildStepByStep() {
 
   function resetAndPlay() {
     tb.slider.value = 0; tb.lbl.textContent = '0:00 / 0:00';
-    paused = false; tb.btn.innerHTML = '⏸';
+    prS.v = false;
     video.addEventListener('canplay', function h() {
       video.removeEventListener('canplay', h);
-      if (!paused) video.play().catch(() => {});
+      if (!prS.v) playAll(video, tb, prS);
     }, { once: true });
   }
 
