@@ -73,6 +73,8 @@
     .section + .section { border-top: 1px solid var(--border); }
     .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em; }
     .section-subtitle { font-size: 0.92rem; color: var(--text-sec); margin-bottom: 24px; }
+    .section-subtitle p { margin: 0 0 0.85em; }
+    .section-subtitle p:last-child { margin-bottom: 0; }
 
     .panel {
       background: var(--bg); border: 1px solid var(--border);
@@ -240,7 +242,12 @@
       padding: 12px 18px; background: var(--bg-alt);
       border-bottom: 1px solid var(--border);
     }
-    .demo-panel-header .title { font-weight: 700; font-size: 1rem; flex: 1; }
+    .demo-panel-header .title { font-weight: 700; font-size: 1rem; }
+    .demo-panel-header .title-block { flex: 1; min-width: 200px; }
+    .demo-panel-header .title-note {
+      display: block; font-size: 0.72rem; font-weight: 500; color: var(--text-dim);
+      margin-top: 3px; line-height: 1.35; max-width: 56ch;
+    }
     .demo-btn {
       padding: 5px 14px; border-radius: 100px;
       border: 1px solid var(--border); background: #fff;
@@ -277,9 +284,18 @@
       justify-content: center;
       border-right: 1px solid var(--border); background: #fff;
     }
-    .demo-left .demo-hint {
+    .demo-left .demo-hint, .qual-left .demo-hint, .demo-right .demo-hint {
       font-size: 0.72rem; font-weight: 700; color: var(--text-dim);
       text-transform: uppercase; letter-spacing: 0.06em; text-align: center;
+    }
+    .demo-right > .demo-rollout-intro { margin-bottom: 10px; width: 100%; }
+    .demo-right > .demo-hint { margin-bottom: 10px; }
+    .demo-rollout-intro {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .demo-rollout-intro p {
+      margin: 0; font-size: 0.78rem; color: var(--text-sec); text-align: center;
+      max-width: 420px; line-height: 1.45;
     }
     .demo-left canvas.density {
       width: 400px; height: 400px;
@@ -455,6 +471,63 @@
       .hero-icon { width: 48px; height: 48px; }
       .content { padding: 0 12px; }
     }
+
+    /* ─── Results subsections ─── */
+    .subsection { padding: 24px 0 16px; }
+    .subsection + .subsection { border-top: 1px solid var(--border); }
+    .subsection-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em; }
+    .subsection-subtitle { font-size: 0.92rem; color: var(--text-sec); margin-bottom: 20px; }
+    .subsection-subtitle p { margin: 0 0 0.85em; }
+    .subsection-subtitle p:last-child { margin-bottom: 0; }
+
+    /* ─── Qualitative results left column ─── */
+    .qual-left {
+      flex: 0 0 auto; padding: 18px;
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
+      justify-content: flex-start;
+      border-right: 1px solid var(--border); background: #fff;
+    }
+    .qual-frs-wrap {
+      width: 400px; border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; background: #f5f5f5;
+    }
+    .qual-frs-wrap img { width: 100%; display: block; }
+
+    /* ─── Qualitative results right column ─── */
+    .qual-video-wrap {
+      position: relative; width: 400px; height: 400px;
+      border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; background: #111;
+    }
+    .qual-video { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .qual-frs-overlay {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 3;
+      transition: opacity 0.15s;
+      /* Colorize the binary mask to FRS green at ~50% opacity.
+         mix-blend-mode:multiply keeps the video visible underneath. */
+      opacity: 0.9;
+      mix-blend-mode: multiply;
+      filter: invert(1) sepia(1) saturate(4) hue-rotate(80deg);
+    }
+    .qual-vid-badge {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      z-index: 5; white-space: nowrap;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px; border-radius: 6px;
+      background: rgba(0,0,0,0.45); color: rgba(255,255,255,0.88);
+      backdrop-filter: blur(6px); pointer-events: none;
+    }
+    @media (max-width: 900px) {
+      .qual-left {
+        flex: 1 1 100%; width: 100%; padding: 16px;
+        border-right: none; border-bottom: 1px solid var(--border);
+      }
+      .qual-left canvas.density { width: min(100%, 420px) !important; height: auto !important; aspect-ratio: 1/1 !important; }
+      .qual-frs-wrap { width: min(100%, 420px); }
+      .qual-video-wrap { width: min(100%, 420px) !important; height: auto !important; aspect-ratio: 1/1 !important; }
+    }
   </style>
 </head>
 <body>
@@ -464,6 +537,8 @@
     <a href="../index.html">&larr; Home</a>
     <a href="#dynamics">Dynamics</a>
     <a href="#demo">Interactive Demo</a>
+    <a href="#results">Results</a>
+    <a href="#qual-results">Qualitative</a>
     <a href="#steering">Steering</a>
     <a href="#regularizer">Regularizer</a>
     <a href="#failure">Failure Detection</a>
@@ -476,7 +551,8 @@
     <span class="hero-icon" style="display:flex;align-items:center;justify-content:center;font-size:52px;line-height:1">😈</span>
     <h1>Naughty Dubins Car</h1>
   </div>
-  <p>How well does diffusion world model steering work? We study this in a simulated navigation task with stochastic dynamics. Robots can be mischievous—they do not always behave as intended, and may even do the opposite of what we ask. With this in mind, we investigate how effectively we can steer the world model of this <b>naughty Dubins car</b> to imagine possible future trajectories.</p>
+  <p>How well does diffusion world model steering work? We study this in a comprehensive manner with a simulated navigation task with stochastic dynamics. <br><br>
+    Robots are often mischievous—they do not always behave as intended, and may even do the opposite of what we ask. <br><b><i>Naughty</i> Dubins car</b> is a Dubins car with a circular failure region at the center of the environment, and a "naughty" behavior: with a small probability, the sign of its angular velocity action is flipped, which introduces uncertainty in dynamics. With this in mind, we investigate how effectively we can steer the world model to imagine possible future trajectories.</p>
 </div>
 
 <div class="content">
@@ -524,22 +600,29 @@
         Specifically, $\delta_t = -1$ with probability $0.4$ and $\delta_t = +1$ with probability $0.6$. The ground-truth criterion that defines the failure set is given by
       </p>
       <div class="eq">
-        $$r(\mathbf{s}) = p_x^2 + p_y^2 - 0.5^2$$
+        $$r(\mathbf{s}) = p_x^2 + p_y^2 - 0.25^2$$
       </div>
       <p>
-        This yields a circular failure region of radius $0.5\,\mathrm{m}$ centered at the origin. We train a diffusion-based world model following the EDM framework using 4000 randomly sampled trajectories, and subsequently learn the criterion function atop the model's latent space. Steering utilizes the learned safety margin as the objective—maximizing it for optimistic, or minimizing it for pessimistic steering. The exponential growth of possible outcomes from the sign-flip stochasticity poses a significant challenge for long-horizon steering.
+        This yields a circular failure region of radius $0.25\,\mathrm{m}$ centered at the origin. We train a diffusion-based world model following the EDM framework using 4000 randomly sampled trajectories, and subsequently learn the criterion function atop the model's latent space. Steering utilizes the learned safety margin as the objective—maximizing it for optimistic, or minimizing it for pessimistic steering. The exponential growth of possible outcomes from the sign-flip stochasticity poses a significant challenge for long-horizon steering.
       </p>
     </div>
   </div>
 
   <!-- ═════ Interactive demo ═════ -->
   <div class="section" id="demo">
-    <div class="section-title">Steering Naughty Dubins Car</div>
-    <div class="section-subtitle">Click <b>Refresh</b> to re-sample an initial state $\mathbf{s}_0$ and a base action sequence $(a_t)$. The <span style="color:#e53935;font-weight:700">red</span> / <span style="color:#1e88e5;font-weight:700">blue</span> noises are the optimal initial noises corresponding to the pessimistic / optimistic steering of the world model. Click any dot to play the corresponding stochastic trajectory on the right (it loops automatically until you press pause). Toggle <span style="color:#2e7d32;font-weight:700">Possible Trajectories (Forward Reachable Set)</span> to overlay the empirical forward-reachable set under the true stochastic dynamics.</div>
+    <div class="section-title">What is noise optimization?</div>
+    <div class="section-subtitle">
+      <p>Given a fixed initial state and a fixed action sequence, stochasticity in dynamics lead to multiple different outcomes in world model generations. Noise optimization aims to choose an initial noise of the world model to <b>steer</b> the world model means selecting the <b>initial noise</b> so that the generated trajectory moves toward a chosen extremum of the safety criterion. Use the <b>Pessimistic</b> / <b>Optimistic</b> toggle to compare two searched noise patterns that target opposite ends of that criterion. The <span style="color:#e53935;font-weight:700">red</span> and <span style="color:#1e88e5;font-weight:700">blue</span> points on the left mark those two candidate initial noises; other gray points are random samples for context.</p>
+      <p>Click <b>Refresh</b> to draw a new $\mathbf{s}_0$ and new actions $(a_t)$. Click any dot in the noise plot to play the corresponding stochastic trajectory on the right; playback loops until you press pause. Turn on <span style="color:#2e7d32;font-weight:700">Possible trajectories (forward reachable set)</span> to see where rollouts can spread under the true stochastic dynamics.</p>
+      <p><i>(This is an analytical demo with exact dynamics, not WM generations.)</i></p>
+    </div>
 
     <div class="panel">
       <div class="demo-panel-header">
-        <span class="title">Interactive rollout</span>
+        <div class="title-block">
+          <span class="title">Noise optimization for steering</span>
+          <span class="title-note">Analytic rollouts with exact dynamics.</span>
+        </div>
         <div class="demo-toggle" id="demo-dir">
           <button class="active" data-dir="pessimistic">Pessimistic</button>
           <button data-dir="optimistic">Optimistic</button>
@@ -565,6 +648,9 @@
         </div>
 
         <div class="demo-right">
+          <div class="demo-rollout-intro">
+            <div class="demo-hint">Stochastic rollout · exact dynamics</div>
+          </div>
           <div class="demo-stage" id="demo-stage">
             <canvas class="cmp-layer cmp-base" id="demo-canvas-sel" width="480" height="480"></canvas>
 
@@ -577,7 +663,7 @@
             </div>
 
             <!-- Stage title -->
-            <div class="cmp-side cmp-side-l">Stochastic rollout&nbsp;·&nbsp;selected&nbsp;$\delta$</div>
+            <div class="cmp-side cmp-side-l">Stochastic rollout (Simulation)</div>
           </div>
 
           <div class="demo-time-bar">
@@ -590,11 +676,66 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ═════ Steering ═════ -->
-  <div class="section" id="steering">
-    <div class="section-title">How well does initial noise optimization work?</div>
+    <!-- ── Qualitative Results ── -->
+    <div class="subsection" id="qual-results">
+      <div class="subsection-title">Results — Steering Naughty Dubins Car World Model via Noise Optimization</div>
+      <div class="subsection-subtitle">
+        <p>Now, let’s steer the world model! We optimize the initial noise of the naughty Dubins car world model to maximize or minimize the safety margin: <span style="color:#e53935;font-weight:700">pessimistic</span> steering searches for worst-case outcomes, while <span style="color:#1e88e5;font-weight:700">optimistic</span> steering seeks best-case trajectories—both of which can be difficult to discover under uniform random initialization (gray points). For comparison, we also sample <i>N</i> = 20 random rollouts per scenario. Click <b>Refresh scenario</b> to load a new trajectory, or select any point in the noise scatter to visualize its rollout.</p>
+        <p><strong>Note:</strong> The video on the right shows open-loop imagination from the learned world model, not ground-truth trajectories. As such, generations and steering results may be imperfect due to model bias or error.</p>
+      </div>
+
+      <div class="panel">
+        <div class="demo-panel-header">
+          <div class="title-block">
+            <span class="title">WM Rollouts via Optimized Noise</span>
+            <span class="title-note">Every clip is <strong>WM imagination</strong> (open loop).</span>
+          </div>
+          <div class="demo-toggle" id="qual-dir">
+            <button class="active" data-dir="pessimistic">Pessimistic</button>
+            <button data-dir="optimistic">Optimistic</button>
+          </div>
+          <button class="demo-btn frs-btn" id="qual-frs-btn" aria-pressed="true">
+            <span class="frs-dot"></span><span>Possible Trajectories</span>
+          </button>
+          <button class="demo-btn primary" id="qual-refresh">↻ Refresh scenario</button>
+        </div>
+
+        <div class="demo-body">
+          <div class="qual-left">
+            <div class="demo-hint">Noise Space · click a sample</div>
+            <canvas class="density" id="qual-density" width="400" height="400"></canvas>
+            <div class="demo-legend">
+              <span><span class="sw" style="background:#9e9e9e;border:1.5px solid #616161"></span>Initial Noise</span>
+              <span><span class="sw" style="background:#000;border:2px solid #000"></span>Selected</span>
+              <span><span class="sw" style="background:#e53935;border:1.5px solid #b71c1c"></span>Pessimistic</span>
+              <span><span class="sw" style="background:#1e88e5;border:1.5px solid #0d47a1"></span>Optimistic</span>
+              <span><span class="sw" style="background:#4caf50;border:1.5px solid #388e3c;border-radius:2px"></span>FRS</span>
+            </div>
+            <div class="demo-selinfo" id="qual-selinfo">—</div>
+          </div>
+
+          <div class="demo-right">
+            <div class="demo-hint">World model imagination (open loop)</div>
+            <div class="qual-video-wrap">
+              <video class="qual-video" id="qual-video" autoplay loop muted playsinline></video>
+              <canvas class="qual-frs-overlay" id="qual-frs-overlay" width="480" height="480"></canvas>
+            </div>
+            <div class="demo-time-bar">
+              <button class="demo-play" id="qual-play" aria-label="Play/pause">
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><rect x="0" y="0" width="3.5" height="12" rx="1"/><rect x="6.5" y="0" width="3.5" height="12" rx="1"/></svg>
+              </button>
+              <input type="range" class="demo-slider" id="qual-slider" min="0" max="1000" value="0">
+              <span class="demo-time-label" id="qual-time-label">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Steering ── -->
+    <div class="subsection" id="steering">
+      <div class="subsection-title">How well does initial noise optimization work?</div>
     <div class="section-subtitle">We tested steering of naughty dubins car world model with the initial noise optimization, with 5000 randomly sampled evaluation trajectories. The goal is to test if steering can maximize/minimize the criterion (safety margin) while keeping plausibility in imaginations (i.e., do not steer more than the physical limits). </div>
 
     <div class="callout">
@@ -613,14 +754,14 @@
       </div>
       <div class="panel-body"><div class="chart-wrap"><canvas id="c_steering"></canvas></div></div>
       <div class="panel-caption">
-        <span class="c-ok"><b>With regularizer (orange)</b></span> pushes the margin toward the GT bound while staying on the plausible side of it. <span class="c-ood"><b>No regularizer (green)</b></span> trivially overshoots the GT bound — the steered noise leaves the in-distribution manifold and predicts margins beyond the physical limits. Nominal / Best-of-N are effectively indistinguishable, confirming that naive sampling cannot steer this long-horizon imagination.
+        <span class="c-ok"><b>With regularizer (orange)</b></span> pushes the margin toward the GT bound while staying on the plausible side of it. <span class="c-ood"><b>No regularizer (green)</b></span> trivially overshoots the GT bound — the optimized noise leaves the in-distribution manifold and predicts margins beyond the physical limits. Nominal / Best-of-N are effectively indistinguishable, confirming that naive sampling cannot steer this long-horizon imagination.
       </div>
     </div>
   </div>
 
-  <!-- ═════ Regularizer ═════ -->
-  <div class="section" id="regularizer">
-    <div class="section-title">How well does the regularizer work?</div>
+    <!-- ── Regularizer ── -->
+    <div class="subsection" id="regularizer">
+      <div class="subsection-title">How well does the regularizer work?</div>
     <div class="section-subtitle">We tested the regularizer on the naughty dubins car world model, with 5000 randomly sampled evaluation trajectories. Spectral density, isotropy, and norm are optimization regularizer terms used during steering. Out-of-distribution score (measured by density estimation via flow matching) is not used for optimization; it is an evaluation-only check for whether the regularizer keeps generations in-distribution.</div>
 
     <div class="panel">
@@ -632,16 +773,16 @@
         <button class="tab" data-key="density">Out-of-distribution score</button>
       </div>
       <div class="panel-body"><div class="chart-wrap"><canvas id="c_reg"></canvas></div></div>
-      <div class="panel-caption" id="reg-caption">Spectral density of steered noise in latent space; lower concentration in a few directions indicates healthier manifold coverage.</div>
+      <div class="panel-caption" id="reg-caption">Spectral density of optimized noise in latent space; lower concentration in a few directions indicates healthier manifold coverage.</div>
     </div>
   </div>
 
-  <!-- ═════ Failure detection ═════ -->
-  <div class="section" id="failure">
-    <div class="section-title">How <i>robustly</i> can we detect failure events using world model steering?</div>
+    <!-- ── Failure Detection ── -->
+    <div class="subsection" id="failure">
+      <div class="subsection-title">How <i>robustly</i> can we detect failure events using world model steering?</div>
     <div class="section-subtitle">
       To evaluate the robustness of failure detection, we tested pessimistic steering on the naughty Dubins car world model, using 5000 randomly sampled evaluation trajectories. Each trajectory is labeled as <b>positive</b> if it has a non-zero probability of entering the failure set under the true dynamics, and <b>negative</b> if—despite the naughty behavior—entry is impossible.<br><br>
-      For each case, we steer the model's imagination using just the action sequence and initial state, and classify the trajectory as positive or negative. Ideally, pessimistic steering will imagine failures for positives (TPR↑) without falsely predicting failures for negatives (FPR↓). When steering is performed without the regularizer (green), the optimization tends to overshoot the ground-truth bound: steered noise leaves the in-distribution manifold, predicting margins beyond physical limits—this inflates both TPR and FPR.
+      For each case, we steer the model's imagination using just the action sequence and initial state, and classify the trajectory as positive or negative. Ideally, pessimistic steering will imagine failures for positives (TPR↑) without falsely predicting failures for negatives (FPR↓). When steering is performed without the regularizer (green), the optimization tends to overshoot the ground-truth bound: optimized noise leaves the in-distribution manifold, predicting margins beyond physical limits—this inflates both TPR and FPR.
     </div>
 
     <div class="stat-row">
@@ -663,9 +804,9 @@
     </div>
   </div>
 
-  <!-- ═════ Ablations ═════ -->
-  <div class="section" id="ablations">
-    <div class="section-title">Ablations — which regularizer term matters?</div>
+    <!-- ── Ablations ── -->
+    <div class="subsection" id="ablations">
+      <div class="subsection-title">Ablations — which regularizer term matters?</div>
     <div class="section-subtitle">Out-of-distribution score of the generated latents. Each ablation removes one term from the regularizer; the rest are kept.</div>
 
     <div class="panel">
@@ -676,6 +817,8 @@
       </div>
     </div>
   </div>
+
+  </div><!-- end #results -->
 
   <!-- Floating hover explanation card (positioned by JS) -->
   <div id="chart-tip" role="tooltip"></div>
@@ -1086,7 +1229,7 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
 (function () {
   const C = {
     x_min: -1.25, x_max: 1.25, y_min: -1.25, y_max: 1.25,
-    obs_x: 0, obs_y: 0, obs_r: 0.5,
+    obs_x: 0, obs_y: 0, obs_r: 0.25,
     dt: 0.05, v: 1.0, a_max: 1.25, flip_p: 0.4,
     T: 60, SPF: 80   // SPF = ms per step
   };
@@ -1172,11 +1315,11 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
   function sampleStart() {
     let x, y;
     for (let i = 0; i < 200; i++) {
-      x = (Math.random() - 0.5) * (C.x_max - C.x_min) * 0.8;
-      y = (Math.random() - 0.5) * (C.y_max - C.y_min) * 0.8;
-      if (Math.hypot(x, y) > C.obs_r + 0.2) break;
+      x = (Math.random() - 0.25) * (C.x_max - C.x_min) * 0.8;
+      y = (Math.random() - 0.25) * (C.y_max - C.y_min) * 0.8;
+      if (Math.hypot(x, y) > C.obs_r + 0.1) break;
     }
-    const th = Math.atan2(-y, -x) + gauss2() * 0.4;
+    const th = Math.atan2(-y, -x) + gauss2() * 0.2;
     return [x, y, ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)];
   }
 
@@ -1273,7 +1416,7 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
   const CFG = {
     x_min: -1.25, x_max: 1.25,
     y_min: -1.25, y_max: 1.25,
-    obs_x: 0, obs_y: 0, obs_r: 0.5,
+    obs_x: 0, obs_y: 0, obs_r: 0.25,
     a_max: 1.25, dt: 0.05, v: 1.0,
     buffer: 0.1,
     T: 100,             // max horizon (steps)
@@ -1298,9 +1441,9 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
     for (let tries = 0; tries < 200; tries++) {
       x = Math.random() * ((CFG.x_max - CFG.buffer) - (CFG.x_min + CFG.buffer)) + (CFG.x_min + CFG.buffer);
       y = Math.random() * ((CFG.y_max - CFG.buffer) - (CFG.y_min + CFG.buffer)) + (CFG.y_min + CFG.buffer);
-      if (Math.hypot(x - CFG.obs_x, y - CFG.obs_y) >= CFG.obs_r + 0.05) break;
+      if (Math.hypot(x - CFG.obs_x, y - CFG.obs_y) >= CFG.obs_r + 0.35) break;
     }
-    let theta = Math.atan2(-y, -x) + gauss();
+    let theta = Math.atan2(-y, -x) + gauss() * 0.4;
     theta = ((theta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     return [x, y, theta];
   }
@@ -1740,10 +1883,10 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
     let tag = '';
     if (isPess) tag = ' &middot; <span style="color:#c62828;font-weight:700">pessimistic optimum</span>';
     else if (isOptm) tag = ' &middot; <span style="color:#2e7d32;font-weight:700">optimistic optimum</span>';
-    parts.push(`Sample #${S.selIdx + 1}${tag}`);
+    parts.push(`Initial Noise #${S.selIdx + 1}${tag}`);
     const closeTxt = ''
     const flags = [];
-    if (enteredObs) flags.push('<span style="color:var(--fail);font-weight:700">entered obstacle</span>');
+    // if (enteredObs) flags.push('<span style="color:var(--fail);font-weight:700">entered obstacle</span>');
     parts.push(closeTxt + (flags.length ? ' &middot; ' + flags.join(' &middot; ') : ''));
     selInfo.innerHTML = parts.join('<br>');
   }
@@ -1905,6 +2048,287 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
   refresh();
   // Auto-loop playback by default until the user presses pause.
   play();
+})();
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// QUALITATIVE RESULTS — WM STEERING ROLLOUT VIEWER
+// Noise canvas: same donut/typical-set rendering as the interactive demo above.
+// Right side: video + frs_overlay.png toggled on top (same FRS button pattern).
+// ══════════════════════════════════════════════════════════════════════════════
+(function () {
+  const TRAJS = [
+    'traj_000318','traj_000328','traj_000510','traj_000512','traj_000577',
+    'traj_000604','traj_000640','traj_000666','traj_000700','traj_000748',
+    'traj_000791','traj_000806','traj_000855','traj_000860','traj_000867',
+    'traj_000877','traj_000910','traj_000959','traj_000988','traj_000990',
+    'traj_001103','traj_001129','traj_001133','traj_001140','traj_001190',
+    'traj_001221','traj_001257','traj_001273','traj_001277','traj_001391',
+    'traj_001408','traj_001428','traj_001434','traj_001452','traj_001609',
+    'traj_001705','traj_001748','traj_001764','traj_001814','traj_001859',
+    'traj_001872','traj_001923','traj_001942','traj_001945','traj_001979',
+    'traj_002003','traj_002386','traj_002530','traj_002763','traj_002772',
+    'traj_002829','traj_002840','traj_002857'
+  ];
+  const BASE   = 'dubins_rollout/';
+  const N_RAND = 18;
+
+  const cv         = document.getElementById('qual-density');
+  const dctx       = cv.getContext('2d');
+  const vid        = document.getElementById('qual-video');
+  const frsOvr     = document.getElementById('qual-frs-overlay');
+  const frsOvrCtx  = frsOvr.getContext('2d');
+  const frsBtn     = document.getElementById('qual-frs-btn');
+  const refreshBtn = document.getElementById('qual-refresh');
+  const dirToggle  = document.getElementById('qual-dir');
+  const selInfo    = document.getElementById('qual-selinfo');
+  const qualPlay   = document.getElementById('qual-play');
+  const qualSlider = document.getElementById('qual-slider');
+  const qualTime   = document.getElementById('qual-time-label');
+
+  const SVG_PLAY  = '<svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor"><polygon points="0,0 11,6 0,12"/></svg>';
+  const SVG_PAUSE = '<svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><rect x="0" y="0" width="3.5" height="12" rx="1"/><rect x="6.5" y="0" width="3.5" height="12" rx="1"/></svg>';
+
+  // ── Donut geometry (mirrors the interactive demo above) ────────────────────
+  const D = {
+    W: cv.width, H: cv.height,
+    cx: cv.width / 2, cy: cv.height / 2,
+    R: Math.min(cv.width, cv.height) * 0.36,
+    sigma: Math.min(cv.width, cv.height) * 0.07
+  };
+
+  function mulberry32(seed) {
+    let t = seed >>> 0;
+    return function () {
+      t = (t + 0x6D2B79F5) >>> 0;
+      let x = t;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashString(s) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  let rand01 = Math.random;
+  function gauss() {
+    let u = 0, v = 0;
+    while (!u) u = rand01();
+    while (!v) v = rand01();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Orange donut background (pre-baked, same formula as demo above)
+  const bgImg = (() => {
+    const img = dctx.createImageData(D.W, D.H);
+    const d = img.data;
+    for (let py = 0; py < D.H; py++) {
+      for (let px = 0; px < D.W; px++) {
+        const r  = Math.sqrt((px - D.cx) ** 2 + (py - D.cy) ** 2);
+        const t  = Math.exp(-((r - D.R) ** 2) / (2 * D.sigma * D.sigma));
+        const i  = (py * D.W + px) * 4;
+        d[i]     = Math.round(247 + t * 8);
+        d[i + 1] = Math.round(248 - t * 72);
+        d[i + 2] = Math.round(250 - t * 170);
+        d[i + 3] = 255;
+      }
+    }
+    return img;
+  })();
+
+  function randomDonutPoint() {
+    const angle = rand01() * 2 * Math.PI;
+    let rOff;
+    do { rOff = gauss() * D.sigma * 0.65; } while (Math.abs(rOff) > 1.5 * D.sigma);
+    const r = D.R + rOff;
+    return { x: D.cx + r * Math.cos(angle), y: D.cy + r * Math.sin(angle) };
+  }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let currentTraj = null;
+  let pts    = [];   // [{x, y, type, idx}]  — canvas-pixel coords
+  let selPt  = null;
+  let frsOn  = true;
+
+  function genPoints(trajKey) {
+    const prev = rand01;
+    rand01 = mulberry32(hashString(trajKey || 'default'));
+    try {
+      const arr = [];
+      for (let i = 0; i < N_RAND; i++) {
+        arr.push({ ...randomDonutPoint(), type: 'random', idx: i });
+      }
+      arr.push({ ...randomDonutPoint(), type: 'pessimistic' });
+      arr.push({ ...randomDonutPoint(), type: 'optimistic'  });
+      return arr;
+    } finally {
+      rand01 = prev;
+    }
+  }
+
+  // ── Noise canvas rendering (same style as interactive demo) ────────────────
+  function drawCanvas() {
+    dctx.putImageData(bgImg, 0, 0);
+
+    dctx.fillStyle = 'rgba(120,120,120,0.45)';
+    dctx.font = '9px Noto Sans, system-ui, sans-serif';
+    dctx.textAlign = 'center'; dctx.textBaseline = 'middle';
+    dctx.fillText('low density region', D.cx, D.cy);
+
+    dctx.fillStyle = 'rgba(184,92,0,0.7)';
+    dctx.font = 'bold 10px Noto Sans, system-ui, sans-serif';
+    dctx.fillText('typical set', D.cx, D.cy - D.R - 14);
+
+    const C = {
+      random:  { fill: '#9e9e9e', stroke: '#616161' },
+      pess:    { fill: '#e53935', stroke: '#b71c1c' },
+      opt:     { fill: '#1e88e5', stroke: '#0d47a1' },
+      selRing: '#000'
+    };
+
+    // Pass 1 — random dots
+    pts.forEach(pt => {
+      if (pt.type !== 'random') return;
+      const isSel = selPt === pt;
+      const r = isSel ? 7 : 5;
+      dctx.beginPath(); dctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+      dctx.fillStyle = isSel ? '#222' : C.random.fill; dctx.fill();
+      dctx.strokeStyle = isSel ? C.selRing : C.random.stroke;
+      dctx.lineWidth = isSel ? 2.5 : 1; dctx.stroke();
+      if (isSel) {
+        dctx.beginPath(); dctx.arc(pt.x, pt.y, r + 5, 0, Math.PI * 2);
+        dctx.strokeStyle = 'rgba(0,0,0,0.25)'; dctx.lineWidth = 2; dctx.stroke();
+      }
+    });
+
+    // Pass 2 — pessimistic / optimistic (drawn on top with label)
+    function drawSpecial(pt, colorKey) {
+      if (!pt) return;
+      const isSel = selPt === pt;
+      const r = isSel ? 9 : 7;
+      const col = C[colorKey];
+      dctx.beginPath(); dctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+      dctx.fillStyle = col.fill; dctx.fill();
+      dctx.strokeStyle = isSel ? C.selRing : col.stroke;
+      dctx.lineWidth = isSel ? 3 : 1.5; dctx.stroke();
+      if (isSel) {
+        dctx.beginPath(); dctx.arc(pt.x, pt.y, r + 6, 0, Math.PI * 2);
+        dctx.strokeStyle = 'rgba(0,0,0,0.2)'; dctx.lineWidth = 2.5; dctx.stroke();
+      }
+      dctx.fillStyle = isSel ? C.selRing : col.stroke;
+      dctx.font = 'bold 9px Noto Sans, system-ui, sans-serif';
+      dctx.textAlign = 'center'; dctx.textBaseline = 'bottom';
+      dctx.fillText(colorKey === 'pess' ? 'pess' : 'opt', pt.x, pt.y - r - 3);
+    }
+    drawSpecial(pts.find(p => p.type === 'pessimistic'), 'pess');
+    drawSpecial(pts.find(p => p.type === 'optimistic'),  'opt');
+  }
+
+  // ── FRS overlay: draw binary mask PNG; CSS filter + opacity do the coloring ──
+  function loadFrs(src) {
+    const W = frsOvr.width, H = frsOvr.height;
+    frsOvrCtx.clearRect(0, 0, W, H);
+    const img = new Image();
+    img.onload = () => {
+      frsOvrCtx.drawImage(img, 0, 0, W, H);
+    };
+    img.src = src;
+  }
+
+  // ── FRS overlay toggle ─────────────────────────────────────────────────────
+  function setFrsOn(on) {
+    frsOn = on;
+    frsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    frsOvr.style.visibility = on ? 'visible' : 'hidden';
+  }
+
+  // ── Load + play a video for the selected noise point ───────────────────────
+  function playPoint(pt) {
+    selPt = pt; drawCanvas();
+    let src, info;
+    if (pt.type === 'pessimistic') {
+      src  = `${BASE}${currentTraj}/pessimistic.mp4`;
+      info = 'optimized noise — pessimistic rollout.';
+    } else if (pt.type === 'optimistic') {
+      src  = `${BASE}${currentTraj}/optimistic.mp4`;
+      info = 'optimized noise — optimistic rollout.';
+    } else {
+      src  = `${BASE}${currentTraj}/imaginations/rollout_${String(pt.idx).padStart(2,'0')}.mp4`;
+      info = `Random noise sample ${pt.idx + 1} — WM imagination.`;
+    }
+    vid.src = src; vid.load(); vid.playbackRate = 2; vid.play().catch(() => {});
+    selInfo.textContent = info;
+  }
+
+  function autoSelect() {
+    const dir = dirToggle.querySelector('button.active').dataset.dir;
+    const pt  = pts.find(p => p.type === dir);
+    if (pt) playPoint(pt);
+  }
+
+  function refresh(forceTraj) {
+    currentTraj = forceTraj || TRAJS[Math.floor(Math.random() * TRAJS.length)];
+    pts = genPoints(currentTraj); selPt = null;
+    loadFrs(`${BASE}${currentTraj}/frs_overlay.png`);
+    autoSelect();
+  }
+
+  // ── Canvas hit-test (mirrors existing demo) ────────────────────────────────
+  function hitTest(evt) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (evt.clientX - rect.left) * (cv.width  / rect.width);
+    const my = (evt.clientY - rect.top)  * (cv.height / rect.height);
+    let best = -1, bd = Infinity;
+    pts.forEach((pt, i) => {
+      const d = Math.hypot(mx - pt.x, my - pt.y);
+      if (d < bd) { bd = d; best = i; }
+    });
+    return best >= 0 && bd < 20 ? best : -1;
+  }
+
+  cv.addEventListener('click', e => { const i = hitTest(e); if (i >= 0) playPoint(pts[i]); });
+  cv.addEventListener('mousemove', e => { cv.style.cursor = hitTest(e) >= 0 ? 'pointer' : 'default'; });
+
+  dirToggle.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      dirToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      autoSelect();
+    });
+  });
+
+  frsBtn.addEventListener('click', () => setFrsOn(!frsOn));
+  setFrsOn(true);
+
+  // ── Video player controls (mirrors existing demo's time bar) ───────────────
+  function fmtT(t) { return isFinite(t) ? t.toFixed(2) + 's' : '—'; }
+
+  vid.addEventListener('timeupdate', () => {
+    if (!vid.duration) return;
+    qualSlider.value = (vid.currentTime / vid.duration) * 1000;
+    qualTime.textContent = `${fmtT(vid.currentTime)} / ${fmtT(vid.duration)}`;
+  });
+  vid.addEventListener('canplay', () => { vid.playbackRate = 2; });
+  vid.addEventListener('play',  () => { qualPlay.innerHTML = SVG_PAUSE; });
+  vid.addEventListener('pause', () => { qualPlay.innerHTML = SVG_PLAY;  });
+  vid.addEventListener('ended', () => { qualSlider.value = 0; });
+
+  qualPlay.addEventListener('click', () => {
+    if (vid.paused) vid.play().catch(() => {}); else vid.pause();
+  });
+  qualSlider.addEventListener('input', () => {
+    if (vid.duration) vid.currentTime = (qualSlider.value / 1000) * vid.duration;
+  });
+
+  refreshBtn.addEventListener('click', () => refresh());
+  refresh('traj_000867');
 })();
 </script>
 
