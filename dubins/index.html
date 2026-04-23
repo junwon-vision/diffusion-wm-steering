@@ -571,7 +571,7 @@
             <!-- Margin readout pinned over the video -->
             <div class="margin-overlay">
               <div class="m-cell" id="m-cell-sel">
-                <span class="m-tag">Stochastic margin</span>
+                <span class="m-tag">Margin (Criterion)</span>
                 <span class="m-val" id="margin-sel">—</span>
               </div>
             </div>
@@ -727,12 +727,12 @@ const labelHelp = {
 // ── Per-metric context (shown after the value in the tooltip) ────────────────
 const metricInfo = {
   margin_opt: {
-    name: 'Margin · max over trajectory',
+    name: 'Margin',
     fmt: (v) => v.toFixed(3),
     help: 'Optimistic steering tries to MINIMIZE the (negative) margin — a value below the GT min would be a physically impossible rollout.'
   },
   margin_pess: {
-    name: 'Margin · max over trajectory',
+    name: 'Margin',
     fmt: (v) => v.toFixed(3),
     help: 'Pessimistic steering tries to MAXIMIZE the margin — a value above the GT max would be a physically impossible rollout.'
   },
@@ -992,8 +992,8 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
     canvasId: 'c_steering',
     headerEl: document.getElementById('steering-header'),
     headerFmt: (k) => k === 'opt'
-      ? 'Optimistic steering — Margin (max over trajectory, mean across 5000 trajectories)'
-      : 'Pessimistic steering — Margin (max over trajectory, mean across 5000 trajectories)',
+      ? 'Optimistic steering — Margin (mean across 5000 trajectories)'
+      : 'Pessimistic steering — Margin (mean across 5000 trajectories)',
     getConfig: (k) => {
       const sub = k === 'opt' ? optSub : pessSub;
       return buildBarConfig(sub, {
