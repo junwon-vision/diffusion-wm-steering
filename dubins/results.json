@@ -1,0 +1,367 @@
+{
+  "meta": {
+    "generated_from": "/home/junwon/robust/diffusion_world_model/scripts/steering",
+    "notes": "Each entry in 'figures' is a ready-to-plot spec. 'bars' lists {label, value, color, [err_95]} per bar. Error bars are 1.96 * std (\u224895% CI). GT lines come from gt_worst_case_margins_eval.json."
+  },
+  "palette": {
+    "Nominal (N=1)": "#0091ff",
+    "Best-of-N (N=10)": "#0048a6",
+    "Steered (no reg)": "#0d948f",
+    "Steered (with reg)": "#ff9500",
+    "Steered (no norm)": "#9b59b6",
+    "Steered (no spectral)": "#2ecc71",
+    "Steered (no std)": "#e74c3c"
+  },
+  "gt_line_colors": {
+    "min": "#6b6b6b",
+    "max": "#d62728",
+    "mean": "#6b6b6b"
+  },
+  "figures": {
+    "full_margin_mean_of_max": {
+      "kind": "grouped_bar",
+      "title": "Margin - Max over trajectory (full)",
+      "ylabel": "Margin",
+      "agg": "mean_of_max",
+      "category": "full",
+      "metric": "margin",
+      "source": "steering_stats_{opt,noopt}_v4.json",
+      "subplots": [
+        {
+          "direction": "optimistic",
+          "title": "Optimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": -0.48969863071404396,
+              "err_95": 1.3774475591977093,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": -0.4913524630702659,
+              "err_95": 1.373319245492092,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": -1.6625631206100806,
+              "err_95": 3.5231210126024024,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": -0.5135526636243798,
+              "err_95": 1.3414339071892025,
+              "color": "#ff9500"
+            }
+          ],
+          "gt_line": {
+            "value": -0.5495682219095293,
+            "label": "GT min (-0.550)",
+            "color": "#6b6b6b",
+            "linestyle": "--"
+          }
+        },
+        {
+          "direction": "pessimistic",
+          "title": "Pessimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": -0.4895739876387641,
+              "err_95": 1.3775066535453342,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": -0.4913524630702659,
+              "err_95": 1.373319245492092,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": -0.11816152382548899,
+              "err_95": 1.2258800085118962,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": -0.3835210341455415,
+              "err_95": 1.064742721833047,
+              "color": "#ff9500"
+            }
+          ],
+          "gt_line": {
+            "value": -0.3691694062935817,
+            "label": "GT max (-0.369)",
+            "color": "#d62728",
+            "linestyle": "--"
+          }
+        }
+      ]
+    },
+    "full_noise_max_spectral": {
+      "kind": "bar",
+      "title": "Noise Metric: max_spectral (full)",
+      "ylabel": "max_spectral",
+      "category": "full",
+      "noise_key": "max_spectral",
+      "source": "steering_stats_{opt,noopt}_v4.json",
+      "subplots": [
+        {
+          "direction": "optimistic",
+          "title": "Optimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": 0.4172820430248976,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": 0.4169208424180746,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": 0.7833961850762368,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": 0.39253561320006847,
+              "color": "#ff9500"
+            }
+          ]
+        }
+      ]
+    },
+    "full_noise_max_std_reg_sample": {
+      "kind": "bar",
+      "title": "Noise Metric: max_std_reg_sample (full)",
+      "ylabel": "max_std_reg_sample",
+      "category": "full",
+      "noise_key": "max_std_reg_sample",
+      "source": "steering_stats_{opt,noopt}_v4.json",
+      "subplots": [
+        {
+          "direction": "optimistic",
+          "title": "Optimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": 0.0028486488647198713,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": 0.0028664806404579183,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": 0.8313630107546108,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": 0.0015403681776116514,
+              "color": "#ff9500"
+            }
+          ]
+        }
+      ]
+    },
+    "full_noise_min_chi2_logprob": {
+      "kind": "bar",
+      "title": "Noise Metric: min_chi2_logprob (full)",
+      "ylabel": "min_chi2_logprob",
+      "category": "full",
+      "noise_key": "min_chi2_logprob",
+      "source": "steering_stats_{opt,noopt}_v4.json",
+      "subplots": [
+        {
+          "direction": "optimistic",
+          "title": "Optimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": -7.649367388473896,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": -7.664785677908055,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": -717.6022624735195,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": -6.291477873085991,
+              "color": "#ff9500"
+            }
+          ]
+        }
+      ]
+    },
+    "full_density_mean_of_mean": {
+      "kind": "bar",
+      "title": "Density - Mean over trajectory (full)",
+      "ylabel": "Density",
+      "agg": "mean_of_mean",
+      "category": "full",
+      "metric": "density",
+      "source": "steering_stats_{opt,noopt}_v4.json",
+      "subplots": [
+        {
+          "direction": "optimistic",
+          "title": "Optimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": 167.08559213735535,
+              "err_95": 39.16354294627216,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": 167.41629865127783,
+              "err_95": 33.20951689485744,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": 696.6073033703353,
+              "err_95": 343.1395259387211,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": 171.79677792190188,
+              "err_95": 42.53544837447555,
+              "color": "#ff9500"
+            }
+          ]
+        }
+      ]
+    },
+    "tp_fp_pessimistic": {
+      "kind": "grouped_bar",
+      "title": "Pessimistic steering",
+      "source": "full_tp_fp_v4.json",
+      "margin_threshold": 0.0,
+      "ylim": [
+        0,
+        1.15
+      ],
+      "subplots": [
+        {
+          "title": "True Positive Rate",
+          "ylabel": "TPR",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": 0.671,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": 0.9063809967396367,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": 0.888,
+              "color": "#ff9500"
+            }
+          ]
+        },
+        {
+          "title": "False Positive Rate",
+          "ylabel": "FPR",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": 0.011,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": 0.2653347353662811,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": 0.072,
+              "color": "#ff9500"
+            }
+          ]
+        }
+      ]
+    },
+    "ablation_full_density_mean_of_mean": {
+      "kind": "bar",
+      "title": "Density - Mean over trajectory (full, ablation)",
+      "ylabel": "Density",
+      "agg": "mean_of_mean",
+      "category": "full",
+      "metric": "density",
+      "source": "steering_stats_{opt,noopt}_ablation_v4.json",
+      "subplots": [
+        {
+          "direction": "optimistic",
+          "title": "Optimistic",
+          "bars": [
+            {
+              "label": "Nominal (N=1)",
+              "value": 167.08559213735535,
+              "err_95": 39.16354294627216,
+              "color": "#0091ff"
+            },
+            {
+              "label": "Best-of-N (N=10)",
+              "value": 167.41629865127783,
+              "err_95": 33.20951689485744,
+              "color": "#0048a6"
+            },
+            {
+              "label": "Steered (no reg)",
+              "value": 696.6073033703353,
+              "err_95": 343.1395259387211,
+              "color": "#0d948f"
+            },
+            {
+              "label": "Steered (with reg)",
+              "value": 171.79677792190188,
+              "err_95": 42.53544837447555,
+              "color": "#ff9500"
+            },
+            {
+              "label": "Steered (no norm)",
+              "value": 206.06270394452676,
+              "err_95": 52.90799723139289,
+              "color": "#9b59b6"
+            },
+            {
+              "label": "Steered (no spectral)",
+              "value": 172.236290414684,
+              "err_95": 41.03622575882153,
+              "color": "#2ecc71"
+            },
+            {
+              "label": "Steered (no std)",
+              "value": 187.29599805122726,
+              "err_95": 71.5104197979572,
+              "color": "#e74c3c"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

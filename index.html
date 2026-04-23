@@ -45,8 +45,10 @@
       max-width: var(--max-w);
       margin: 0 auto;
       display: flex; align-items: center; gap: 32px;
-      height: 52px; overflow-x: auto;
+      height: 52px; overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none;
     }
+    nav .nav-inner::-webkit-scrollbar { display: none; }
     nav a {
       color: var(--text-sec); text-decoration: none;
       font-size: 0.85rem; font-weight: 600;
@@ -81,6 +83,24 @@
       margin: 0 auto;
       text-wrap: balance;
     }
+    .hero-links {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 10px; margin-top: 20px;
+    }
+    .hero-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      border: 1.5px solid var(--border);
+      color: var(--text-sec); background: var(--bg);
+    }
+    .hero-btn:hover {
+      background: var(--bg-alt); border-color: #bbb; color: var(--text);
+    }
+    .hero-btn svg { flex-shrink: 0; }
+    .hero-btn.tentative { opacity: 0.5; cursor: default; pointer-events: none; }
 
     /* ═══ Content ═══ */
     .content { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
@@ -353,6 +373,20 @@
     <h1>Pessimistic World Model Steering</h1>
   </div>
   <p>How can we steer the world model imaginations pessimistically, but meaningfully, for robust decision making?</p>
+  <div class="hero-links">
+    <span class="hero-btn tentative">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      arXiv <span style="font-size:0.75em;font-weight:400">(tentative)</span>
+    </span>
+    <span class="hero-btn tentative">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      Code <span style="font-size:0.75em;font-weight:400">(tentative)</span>
+    </span>
+    <a class="hero-btn" href="dubins/index.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3l-7 3.5a3 3 0 1 0 0 5L15 18a3 3 0 1 0 1-1.73l-7-3.5a3 3 0 0 0 0-2.54l7-3.5A3 3 0 1 0 18 3z"/></svg>
+      Dubins Car Experiment &#8599;
+    </a>
+  </div>
 </div>
 
 <!-- ═══ Content ═══ -->
@@ -1283,7 +1317,7 @@ function buildStepByStep() {
   // 2 hypothetical OOD dead-ends (dotted branches from step 3 and step 5)
   const OOD_DEFS = [
     { label:'OOD', file:'ood_1_small.mp4', fromStep:3, angle:-104, r:22  }, // deep inward (toward center)
-    { label:'OOD', file:'ood.mp4', fromStep:5, angle:-70,  r:145 }, // far outward (beyond ring)
+    { label:'OOD', file:'ood_2_small.mp4', fromStep:5, angle:-70,  r:145 }, // far outward (beyond ring)
   ];
 
   // Compute canvas coordinates
