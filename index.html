@@ -367,7 +367,7 @@
     <a href="#step-by-step" class="active">Noise Optimization</a>
     <a href="#manipulation">Robotic Manipulation</a>
     <a href="#quantitative">Quantitative Results</a>
-    <a href="#policy-rollout">Policy Rollout</a>
+    <a href="#policy-rollout">Robust Policy Learning</a>
     <a href="#driving-unconditional">Autonomous Driving</a>
     <a href="#driving-conditional">Robust Decision Making</a>
   </div>
@@ -1783,7 +1783,7 @@ function buildPolicyRollout() {
   chartCard.appendChild(legend);
 
   const chartH3 = document.createElement('h3');
-  chartH3.textContent = 'Policy Rollout Success Rate — n = 20 runs · 95% CI';
+  chartH3.textContent = 'Success Rate (n = 20 runs, Wilson 95% CI)';
   chartCard.appendChild(chartH3);
 
   const chartWrap = document.createElement('div');
@@ -1824,11 +1824,19 @@ function buildPolicyRollout() {
   }
 
   const N = ROLLOUT_QUANT.n;
-  function rci(k) { const p = k/N; return 1.96 * Math.sqrt(p*(1-p)/N); }
-  const nomR = ROLLOUT_QUANT.nominal.map(k => k/N);
-  const robR = ROLLOUT_QUANT.pessimistic.map(k => k/N);
-  const nomE = ROLLOUT_QUANT.nominal.map(rci);
-  const robE = ROLLOUT_QUANT.pessimistic.map(rci);
+  // Wilson score interval — respects [0,1] bounds, better than Wald for small n or extreme p
+  function wilsonCI(k, n, z = 1.96) {
+    const p = k / n, z2 = z * z;
+    const center = (p + z2 / (2 * n)) / (1 + z2 / n);
+    const margin  = (z / (1 + z2 / n)) * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n));
+    return { lo: Math.max(0, p - Math.max(0, center - margin)), hi: Math.min(1, center + margin) - p };
+  }
+  const nomR   = ROLLOUT_QUANT.nominal.map(k => k / N);
+  const robR   = ROLLOUT_QUANT.pessimistic.map(k => k / N);
+  const nomCI  = ROLLOUT_QUANT.nominal.map(k => wilsonCI(k, N));
+  const robCI  = ROLLOUT_QUANT.pessimistic.map(k => wilsonCI(k, N));
+  const nomElo = nomCI.map(ci => ci.lo), nomEhi = nomCI.map(ci => ci.hi);
+  const robElo = robCI.map(ci => ci.lo), robEhi = robCI.map(ci => ci.hi);
   const chartLabels = ROLLOUT_TASKS.map(t => (TASK_EMOJI[t.key] || '') + ' ' + taskDisplayName(t.key));
 
   new Chart(chartCanvas, {
@@ -1836,8 +1844,8 @@ function buildPolicyRollout() {
     data: {
       labels: chartLabels,
       datasets: [
-        { label: 'Nominal', data: nomR, errLo: nomE, errHi: nomE, backgroundColor: '#0091ffcc', borderColor: '#0091ff', borderWidth: 1 },
-        { label: 'Robust',  data: robR, errLo: robE, errHi: robE, backgroundColor: '#ff9500cc', borderColor: '#ff9500', borderWidth: 1 },
+        { label: 'Nominal', data: nomR, errLo: nomElo, errHi: nomEhi, backgroundColor: '#0091ffcc', borderColor: '#0091ff', borderWidth: 1 },
+        { label: 'Robust',  data: robR, errLo: robElo, errHi: robEhi, backgroundColor: '#ff9500cc', borderColor: '#ff9500', borderWidth: 1 },
       ]
     },
     options: {
@@ -1848,9 +1856,10 @@ function buildPolicyRollout() {
         tooltip: {
           callbacks: {
             label(ctx) {
-              const k  = ctx.datasetIndex === 0 ? ROLLOUT_QUANT.nominal[ctx.dataIndex] : ROLLOUT_QUANT.pessimistic[ctx.dataIndex];
-              const ci = ctx.datasetIndex === 0 ? nomE[ctx.dataIndex] : robE[ctx.dataIndex];
-              return ` ${ctx.dataset.label}: ${k}/${N} (${(ctx.parsed.y*100).toFixed(0)}% ± ${(ci*100).toFixed(1)}%)`;
+              const k   = ctx.datasetIndex === 0 ? ROLLOUT_QUANT.nominal[ctx.dataIndex] : ROLLOUT_QUANT.pessimistic[ctx.dataIndex];
+              const ci  = ctx.datasetIndex === 0 ? nomCI[ctx.dataIndex] : robCI[ctx.dataIndex];
+              const p   = ctx.parsed.y;
+              return ` ${ctx.dataset.label}: ${k}/${N} (${(p*100).toFixed(0)}% [-${(ci.lo*100).toFixed(1)}%, +${(ci.hi*100).toFixed(1)}%])`;
             }
           }
         }
