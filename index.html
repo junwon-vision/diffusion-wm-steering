@@ -1622,10 +1622,10 @@ function buildPolicyRollout() {
   // Even indices = .fixed.mp4 (browser-optimised); odd = originals.
   // Folders with only originals use all 4 indices.
   const ROLLOUT_TASKS = [
-    { key: 'jenga',        folder: 'jenga',      videos: { nominal: [0,2,4,6],     pessimistic: [0,2,3,5]   } },
-    { key: 'pickup',       folder: 'pickup',     videos: { nominal: [0,2,4,6,8],   pessimistic: [0,2,4,6]   } },
+    { key: 'jenga',        folder: 'jenga',      videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
+    { key: 'pickup',       folder: 'pickup',     videos: { nominal: [0,1,2,3,4],   pessimistic: [0,1,2,3]   } },
     { key: 'knife',        folder: 'knife',      videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
-    { key: 'coffee',       folder: 'coffee',     videos: { nominal: [0,2,4,6],     pessimistic: [0,2,4,6]   } },
+    { key: 'coffee',       folder: 'coffee',     videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
     { key: 'candy_coffee', folder: 'coffee bag', videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
     { key: 'candy_gummy',  folder: 'candy bag',  videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
   ];
