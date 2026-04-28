@@ -168,6 +168,12 @@
     .video-container.fail-label .vid-label {
       background: rgba(229,57,53,0.7); color: #fff;
     }
+    .video-container.nominal-label .vid-label {
+      background: rgba(0,145,255,0.75); color: #fff;
+    }
+    .video-container.robust-label .vid-label {
+      background: rgba(255,149,0,0.80); color: #fff;
+    }
 
     /* ═══ Time bar ═══ */
     .time-bar-wrap {
@@ -361,6 +367,7 @@
     <a href="#step-by-step" class="active">Noise Optimization</a>
     <a href="#manipulation">Robotic Manipulation</a>
     <a href="#quantitative">Quantitative Results</a>
+    <a href="#policy-rollout">Policy Rollout</a>
     <a href="#driving-unconditional">Autonomous Driving</a>
     <a href="#driving-conditional">Robust Decision Making</a>
   </div>
@@ -476,7 +483,7 @@ const TASK_EMOJI = {
 
 const TASK_DISPLAY = {
   candy_coffee: 'Coffee bag',
-  candy_gummy: 'Gummy bears',
+  candy_gummy: 'Gummy',
   coffee: 'Coffee beans',
   knife: 'Knife placement',
   pickup: 'Spoon',
@@ -1607,6 +1614,307 @@ function buildStepByStep() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// POLICY ROLLOUT  (OpenPI: Nominal vs Robust, random video picker)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildPolicyRollout() {
+  const ROLLOUT_BASE = 'manipulation/policy_rollout/openpi';
+
+  // Even indices = .fixed.mp4 (browser-optimised); odd = originals.
+  // Folders with only originals use all 4 indices.
+  const ROLLOUT_TASKS = [
+    { key: 'jenga',        folder: 'jenga',      videos: { nominal: [0,2,4,6],     pessimistic: [0,2,3,5]   } },
+    { key: 'pickup',       folder: 'pickup',     videos: { nominal: [0,2,4,6,8],   pessimistic: [0,2,4,6]   } },
+    { key: 'knife',        folder: 'knife',      videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
+    { key: 'coffee',       folder: 'coffee',     videos: { nominal: [0,2,4,6],     pessimistic: [0,2,4,6]   } },
+    { key: 'candy_coffee', folder: 'coffee bag', videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
+    { key: 'candy_gummy',  folder: 'candy bag',  videos: { nominal: [0,1,2,3],     pessimistic: [0,1,2,3]   } },
+  ];
+
+  const ROLLOUT_QUANT = {
+    nominal:     [6,  13,  9,  3,  6,  10],
+    pessimistic: [11, 17, 16, 12, 15, 15],
+    n: 20
+  };
+
+  let curTaskIdx = 0;
+  let curPolicy  = 'nominal';
+  let curView    = 'robot'; // 'robot' | 'third'
+
+  // ── Section ──
+  const section = document.createElement('div');
+  section.className = 'section';
+  section.id = 'policy-rollout';
+  section.innerHTML = `<h2 class="section-title">Robust Policy Learning</h2>
+    <p class="section-subtitle">Rollout examples per task comparing risk-neutral (nominal) vs risk-averse (robust) policies, finetuning <a href="https://github.com/Physical-Intelligence/openpi" target="_blank" rel="noopener noreferrer">pi05</a> policy with behavior cloning vs. weighted behavior cloning with pessimistic world model steering.</p>`;
+
+  // ── View toggle (above task selector) ──
+  const viewRow = document.createElement('div');
+  viewRow.className = 'reward-selector';
+  const viewLbl = document.createElement('label');
+  viewLbl.textContent = 'Camera:';
+  viewRow.appendChild(viewLbl);
+
+  const btnRobotView = document.createElement('button');
+  btnRobotView.className = 'task-sel-btn active';
+  btnRobotView.textContent = '🤖 Robot View';
+  btnRobotView.addEventListener('click', () => setView('robot'));
+  viewRow.appendChild(btnRobotView);
+
+  const btnThirdView = document.createElement('button');
+  btnThirdView.className = 'task-sel-btn';
+  btnThirdView.textContent = '📹 3rd Person';
+  btnThirdView.addEventListener('click', () => setView('third'));
+  viewRow.appendChild(btnThirdView);
+  section.appendChild(viewRow);
+
+  // ── Task selector ──
+  const taskSel = document.createElement('div');
+  taskSel.className = 'task-selector';
+  ROLLOUT_TASKS.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'task-sel-btn' + (i === 0 ? ' active' : '');
+    btn.dataset.ti = i;
+    btn.textContent = (TASK_EMOJI[t.key] || '') + ' ' + taskDisplayName(t.key);
+    btn.addEventListener('click', () => selectTask(i));
+    taskSel.appendChild(btn);
+  });
+  section.appendChild(taskSel);
+
+  // ── Panel ──
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'panel-header';
+  const hdrTitle = document.createElement('span');
+  const hdrBadge = document.createElement('span');
+  hdrBadge.className = 'badge';
+  hdrBadge.textContent = 'Nominal';
+  hdr.appendChild(hdrTitle);
+  hdr.appendChild(hdrBadge);
+  panel.appendChild(hdr);
+
+  // Action strip: policy toggle + random button
+  const actStrip = document.createElement('div');
+  actStrip.className = 'action-strip';
+  const polLbl = document.createElement('span');
+  polLbl.className = 'action-strip-label';
+  polLbl.textContent = 'Policy:';
+  actStrip.appendChild(polLbl);
+
+  const btnNom = document.createElement('button');
+  btnNom.className = 'action-btn active';
+  btnNom.textContent = 'Nominal';
+  btnNom.addEventListener('click', () => setPolicy('nominal'));
+  actStrip.appendChild(btnNom);
+
+  const btnRob = document.createElement('button');
+  btnRob.className = 'action-btn';
+  btnRob.textContent = 'Robust';
+  btnRob.addEventListener('click', () => setPolicy('pessimistic'));
+  actStrip.appendChild(btnRob);
+
+  const spacer = document.createElement('span');
+  spacer.style.flex = '1';
+  actStrip.appendChild(spacer);
+
+  const btnRand = document.createElement('button');
+  btnRand.className = 'action-btn';
+  btnRand.style.cssText = 'border-color:var(--accent);color:var(--accent);';
+  btnRand.innerHTML = '&#8635; Random';
+  btnRand.addEventListener('click', () => loadRollout());
+  actStrip.appendChild(btnRand);
+  panel.appendChild(actStrip);
+
+  // Video area (single video)
+  const va = document.createElement('div');
+  va.className = 'video-area';
+  const vc = document.createElement('div');
+  vc.className = 'video-container nominal-label';
+  const vid = document.createElement('video');
+  vid.muted = true; vid.playsInline = true; vid.preload = 'auto';
+  vid.setAttribute('muted', ''); vid.setAttribute('playsinline', ''); vid.setAttribute('autoplay', '');
+  vc.appendChild(vid);
+  const vLbl = document.createElement('div');
+  vLbl.className = 'vid-label';
+  vLbl.textContent = 'Nominal';
+  vc.appendChild(vLbl);
+  va.appendChild(vc);
+  panel.appendChild(va);
+
+  // Time bar
+  const tb = buildTimeBar();
+  const paused = { v: false };
+  vid.addEventListener('play',   () => { paused.v = false; tb.btn.innerHTML = BTN_PAUSE; });
+  vid.addEventListener('ended',  () => {
+    paused.v = true; tb.btn.innerHTML = BTN_PLAY;
+    if (vid.duration) { tb.slider.value = 1000; tb.lbl.textContent = fmt(vid.duration) + ' / ' + fmt(vid.duration); }
+  });
+  vid.addEventListener('timeupdate', () => {
+    if (vid.duration) {
+      tb.slider.value = (vid.currentTime / vid.duration) * 1000;
+      tb.lbl.textContent = fmt(vid.currentTime) + ' / ' + fmt(vid.duration);
+    }
+  });
+  let rkSeeking = false;
+  tb.slider.addEventListener('input',  () => { rkSeeking = true; vid.currentTime = (tb.slider.value / 1000) * vid.duration; });
+  tb.slider.addEventListener('change', () => { rkSeeking = false; });
+  tb.btn.addEventListener('click', () => {
+    paused.v = !paused.v;
+    if (paused.v) { vid.pause(); tb.btn.innerHTML = BTN_PLAY; }
+    else { if (vid.ended) vid.currentTime = 0; playAll(vid, tb, paused); }
+  });
+  panel.appendChild(tb.wrap);
+  section.appendChild(panel);
+
+  // ── Quantitative chart ──
+  const chartCard = document.createElement('div');
+  chartCard.className = 'chart-card';
+
+  const legend = document.createElement('div');
+  legend.className = 'chart-legend';
+  [{ color: '#0091ff', label: 'Nominal' }, { color: '#ff9500', label: 'Robust (Pessimistic)' }].forEach(({ color, label }) => {
+    const it = document.createElement('div');
+    it.className = 'chart-legend-item';
+    it.innerHTML = `<div class="chart-legend-swatch" style="background:${color}"></div>${label}`;
+    legend.appendChild(it);
+  });
+  chartCard.appendChild(legend);
+
+  const chartH3 = document.createElement('h3');
+  chartH3.textContent = 'Policy Rollout Success Rate — n = 20 runs · 95% CI';
+  chartCard.appendChild(chartH3);
+
+  const chartWrap = document.createElement('div');
+  chartWrap.className = 'chart-wrap';
+  const chartCanvas = document.createElement('canvas');
+  chartWrap.appendChild(chartCanvas);
+  chartCard.appendChild(chartWrap);
+  section.appendChild(chartCard);
+
+  // Register errorBar plugin (same id as buildFailureDetection — safe to call late)
+  if (!Chart.registry.plugins.get('errorBar')) {
+    Chart.register({
+      id: 'errorBar',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((ds, di) => {
+          if (!ds.errLo || !ds.errHi) return;
+          const meta = chart.getDatasetMeta(di);
+          meta.data.forEach((bar, i) => {
+            const val = ds.data[i];
+            if (val == null || isNaN(val)) return;
+            const lo = ds.errLo[i] || 0, hi = ds.errHi[i] || 0;
+            const x = bar.x;
+            const yTop = chart.scales.y.getPixelForValue(val + hi);
+            const yBot = chart.scales.y.getPixelForValue(val - lo);
+            const cap = 4;
+            ctx.save();
+            ctx.strokeStyle = ds.borderColor;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.moveTo(x, yTop); ctx.lineTo(x, yBot); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x - cap, yTop); ctx.lineTo(x + cap, yTop); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x - cap, yBot); ctx.lineTo(x + cap, yBot); ctx.stroke();
+            ctx.restore();
+          });
+        });
+      }
+    });
+  }
+
+  const N = ROLLOUT_QUANT.n;
+  function rci(k) { const p = k/N; return 1.96 * Math.sqrt(p*(1-p)/N); }
+  const nomR = ROLLOUT_QUANT.nominal.map(k => k/N);
+  const robR = ROLLOUT_QUANT.pessimistic.map(k => k/N);
+  const nomE = ROLLOUT_QUANT.nominal.map(rci);
+  const robE = ROLLOUT_QUANT.pessimistic.map(rci);
+  const chartLabels = ROLLOUT_TASKS.map(t => (TASK_EMOJI[t.key] || '') + ' ' + taskDisplayName(t.key));
+
+  new Chart(chartCanvas, {
+    type: 'bar',
+    data: {
+      labels: chartLabels,
+      datasets: [
+        { label: 'Nominal', data: nomR, errLo: nomE, errHi: nomE, backgroundColor: '#0091ffcc', borderColor: '#0091ff', borderWidth: 1 },
+        { label: 'Robust',  data: robR, errLo: robE, errHi: robE, backgroundColor: '#ff9500cc', borderColor: '#ff9500', borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              const k  = ctx.datasetIndex === 0 ? ROLLOUT_QUANT.nominal[ctx.dataIndex] : ROLLOUT_QUANT.pessimistic[ctx.dataIndex];
+              const ci = ctx.datasetIndex === 0 ? nomE[ctx.dataIndex] : robE[ctx.dataIndex];
+              return ` ${ctx.dataset.label}: ${k}/${N} (${(ctx.parsed.y*100).toFixed(0)}% ± ${(ci*100).toFixed(1)}%)`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: { min: 0, max: 1, title: { display: true, text: 'success rate' }, ticks: { callback: v => `${(v*100).toFixed(0)}%` } }
+      }
+    }
+  });
+
+  // ── State helpers ──
+  function selectTask(i) {
+    curTaskIdx = i;
+    taskSel.querySelectorAll('.task-sel-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+    const t = ROLLOUT_TASKS[i];
+    hdrTitle.textContent = (TASK_EMOJI[t.key] || '') + ' ' + taskDisplayName(t.key) + ' ';
+    loadRollout();
+  }
+
+  function setPolicy(p) {
+    curPolicy = p;
+    const isNom = p === 'nominal';
+    btnNom.classList.toggle('active', isNom);
+    btnRob.classList.toggle('active', !isNom);
+    hdrBadge.textContent = isNom ? 'Nominal' : 'Robust';
+    vLbl.textContent     = isNom ? 'Nominal' : 'Robust';
+    vc.className = 'video-container ' + (isNom ? 'nominal-label' : 'robust-label');
+    loadRollout();
+  }
+
+  function setView(v) {
+    curView = v;
+    const isRobot = v === 'robot';
+    btnRobotView.classList.toggle('active', isRobot);
+    btnThirdView.classList.toggle('active', !isRobot);
+    btnRand.style.display = isRobot ? '' : 'none';
+    loadRollout();
+  }
+
+  function loadRollout() {
+    const t   = ROLLOUT_TASKS[curTaskIdx];
+    const enc = t.folder.replace(/ /g, '%20');
+    let src;
+    if (curView === 'third') {
+      src = `${ROLLOUT_BASE}/${enc}/${curPolicy}.mp4`;
+    } else {
+      const indices = t.videos[curPolicy];
+      const idx     = indices[Math.floor(Math.random() * indices.length)];
+      src = `${ROLLOUT_BASE}/${enc}/${curPolicy}/${idx}.mp4`;
+    }
+    vid.src = src;
+    vid.load();
+    paused.v = false;
+    vid.addEventListener('canplay', function h() {
+      vid.removeEventListener('canplay', h);
+      if (!paused.v) playAll(vid, tb, paused);
+    }, { once: true });
+  }
+
+  selectTask(0);
+  return section;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // BUILD PAGE  — all sections on one scrolling page
 // ══════════════════════════════════════════════════════════════════════════════
 function build() {
@@ -1687,6 +1995,9 @@ function build() {
   buildRewardCharts(rwHost);
 
   root.appendChild(sq);
+
+  // ── Policy Rollout ──
+  root.appendChild(buildPolicyRollout());
 
   // ── Driving Unconditional ──
   const s2 = document.createElement('div');
