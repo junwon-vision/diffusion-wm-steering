@@ -531,6 +531,15 @@ const TASK_TEXTS = {
   'driving/conditioned/yield': "Does a left vehicle in the intersection merge into the ego vehicle's lane?"
 };
 
+const ROLLOUT_TASK_TEXTS = {
+  jenga:        'Put the orange block on the blue block.',
+  pickup:       'Pick up the blue knife from the green plate.',
+  knife:        'Put the knife inside of the blue bowl.',
+  coffee:       'Pour the coffee into the bowl.',
+  candy_coffee: 'Put the coffee bag in the container.',
+  candy_gummy:  'Put the candy bag in the container.',
+};
+
 /** Matches repo layout: driving/unconditional/<scenario>/, driving/conditioned/<scenario>/ */
 const DRIVING_UNCOND_ROOT = 'driving/unconditional';
 const DRIVING_COND_ROOT = 'driving/conditioned';
@@ -1695,6 +1704,14 @@ function buildPolicyRollout() {
   hdr.appendChild(hdrBadge);
   panel.appendChild(hdr);
 
+  // Task text
+  const tt = document.createElement('div');
+  tt.className = 'task-text';
+  const ttLbl = document.createElement('strong'); ttLbl.textContent = 'PROMPT for VLA: ';
+  const ttTxt = document.createElement('span');   ttTxt.textContent = '';
+  tt.appendChild(ttLbl); tt.appendChild(ttTxt);
+  panel.appendChild(tt);
+
   // Action strip: policy toggle + random button
   const actStrip = document.createElement('div');
   actStrip.className = 'action-strip';
@@ -1876,6 +1893,7 @@ function buildPolicyRollout() {
     taskSel.querySelectorAll('.task-sel-btn').forEach((b, j) => b.classList.toggle('active', j === i));
     const t = ROLLOUT_TASKS[i];
     hdrTitle.textContent = (TASK_EMOJI[t.key] || '') + ' ' + taskDisplayName(t.key) + ' ';
+    ttTxt.textContent = ROLLOUT_TASK_TEXTS[t.key] || '';
     loadRollout();
   }
 
