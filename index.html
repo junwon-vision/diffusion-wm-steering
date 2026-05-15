@@ -64,18 +64,20 @@
       padding: 60px 24px 40px;
       border-bottom: 1px solid var(--border);
     }
-    .hero-brand {
-      display: flex; flex-direction: row; align-items: center;
-      justify-content: center; gap: 16px; margin-bottom: 8px;
+    .hero h1 {
+      font-size: 1.9rem; font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 auto 16px;
+      max-width: var(--max-w);
+      text-align: center; line-height: 1.4;
     }
     .hero-icon {
-      width: 64px; height: 64px; object-fit: contain;
-      display: block; flex-shrink: 0;
-    }
-    .hero h1 {
-      font-size: 2.2rem; font-weight: 700;
-      letter-spacing: -0.02em; margin: 0;
-      text-align: left;
+      display: inline;
+      vertical-align: middle;
+      width: 1.15em; height: 1.15em;
+      object-fit: contain;
+      margin-right: 0.25em;
+      position: relative; top: -0.05em;
     }
     .hero p {
       font-size: 1rem; color: var(--text-sec);
@@ -351,11 +353,51 @@
     }
 
     @media (max-width: 700px) {
-      .hero h1 { font-size: 1.5rem; }
-      .hero-icon { width: 48px; height: 48px; }
+      .hero h1 { font-size: 1.4rem; }
       .content { padding: 0 12px; }
       .video-area { flex-direction: column !important; }
       .thumb-btn { width: 90px; height: 56px; }
+    }
+
+    /* ── Contribution cards ── */
+    .contrib-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin: 0;
+    }
+    .contrib-card {
+      background: rgba(255, 149, 0, 0.06);
+      border-radius: 12px;
+      padding: 18px 20px;
+      border-left: 3px solid #ff9500;
+    }
+    .contrib-card-tag {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #ff9500; margin-bottom: 6px;
+    }
+    .contrib-card-body {
+      font-size: 0.875rem; color: var(--text-sec); line-height: 1.65;
+    }
+    .contrib-card-body a {
+      color: #ff9500; text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .contrib-card-body a:hover { border-bottom-color: #ff9500; }
+    @media (max-width: 580px) { .contrib-grid { grid-template-columns: 1fr; } }
+
+    /* ── Nav subsection links ── */
+    nav a.nav-sub {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      padding: 14px 0;
+      border-bottom: 2px solid transparent;
+    }
+    nav a.nav-sub:hover, nav a.nav-sub.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
     }
   </style>
 </head>
@@ -364,22 +406,19 @@
 <!-- ═══ Nav ═══ -->
 <nav>
   <div class="nav-inner">
-    <a href="#step-by-step" class="active">Noise Optimization</a>
-    <a href="#manipulation">Robotic Manipulation</a>
-    <a href="#quantitative">Quantitative Results</a>
-    <a href="#policy-rollout">Robust Policy Learning</a>
-    <a href="#driving-unconditional">Autonomous Driving</a>
-    <a href="#driving-conditional">Robust Decision Making</a>
+    <a href="#overview" class="active">Overview</a>
+    <a href="#step-by-step">Method</a>
+    <a href="#policy-eval">1. Policy Evaluation</a>
+    <a href="#manipulation" class="nav-sub">1-1. Manipulation</a>
+    <a href="#driving-eval" class="nav-sub">1-2. Driving</a>
+    <a href="#policy-improve">2. Policy Improvement</a>
   </div>
 </nav>
 
 <!-- ═══ Hero ═══ -->
 <div class="hero">
-  <div class="hero-brand">
-    <img class="hero-icon" src="anxiety.png" width="64" height="64" alt="">
-    <h1>Pessimistic World Model Steering</h1>
-  </div>
-  <p>How can we steer the world model imaginations pessimistically, but meaningfully, for robust decision making?</p>
+  <h1><img class="hero-icon" src="anxiety.png" alt="">StressDream: Steering Video World Models<br>for Robust Policy Evaluation and Improvement</h1>
+  <p>We present <strong>StressDream</strong>, an inference-time method that optimizes diffusion noise to steer video world models toward plausible, high-impact outcomes — enabling robust evaluation and improvement of robotic policies.</p>
   <div class="hero-links">
     <span class="hero-btn tentative">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -392,6 +431,10 @@
     <a class="hero-btn" href="dubins/index.html">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3l-7 3.5a3 3 0 1 0 0 5L15 18a3 3 0 1 0 1-1.73l-7-3.5a3 3 0 0 0 0-2.54l7-3.5A3 3 0 1 0 18 3z"/></svg>
       Dubins Car Experiment &#8599;
+    </a>
+    <a class="hero-btn" href="gaussian_typical_set/index.html" target="_blank" rel="noopener noreferrer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      Typical Set of High Dim Gaussian &#8599;
     </a>
   </div>
 </div>
@@ -816,7 +859,7 @@ function buildDrivingUncondPanel() {
 
   const hdr = document.createElement('div');
   hdr.className = 'panel-header';
-  hdr.textContent = 'WM Steering with VLMs';
+  hdr.textContent = 'Driving Video World Model Steering';
   panel.appendChild(hdr);
 
   const tt = document.createElement('div');
@@ -916,7 +959,7 @@ function buildDrivingCondPanel() {
 
   const hdr = document.createElement('div');
   hdr.className = 'panel-header';
-  hdr.textContent = 'Robust Decision Making with Steering';
+  hdr.textContent = 'Robust Action Evaluation with Video World Models';
   panel.appendChild(hdr);
 
   const tt = document.createElement('div');
@@ -1062,7 +1105,7 @@ const METHOD_DISPLAY = {
 // ══════════════════════════════════════════════════════════════════════════════
 const FAILURE_DATA = {"methods":["nominal","best-of-n","ours (pessimistic)"],"colors":{"nominal":"#0091ff","best-of-n":"#0048a6","ours (pessimistic)":"#ff9500"},"tasks":{"candy coffee":{"gt_failure":{"nominal":{"p":0.4118,"lo":0.1112,"hi":0.121},"best-of-n":{"p":0.7059,"lo":0.1194,"hi":0.0966},"ours (pessimistic)":{"p":1.0,"lo":0.0556,"hi":0.0}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0417},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.0417},"ours (pessimistic)":{"p":0.1304,"lo":0.0551,"hi":0.0858}}},"candy gummy":{"gt_failure":{"nominal":{"p":0.2857,"lo":0.1032,"hi":0.1318},"best-of-n":{"p":0.5,"lo":0.1291,"hi":0.1291},"ours (pessimistic)":{"p":0.7143,"lo":0.1318,"hi":0.1032}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.037},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.037},"ours (pessimistic)":{"p":0.0,"lo":0.0,"hi":0.037}}},"Coffee":{"gt_failure":{"nominal":{"p":0.8,"lo":0.1509,"hi":0.0964},"best-of-n":{"p":1.0,"lo":0.0909,"hi":0.0},"ours (pessimistic)":{"p":1.0,"lo":0.0909,"hi":0.0}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0833},"best-of-n":{"p":0.0909,"lo":0.0556,"hi":0.1238},"ours (pessimistic)":{"p":0.4545,"lo":0.14,"hi":0.1476}}},"Jenga":{"gt_failure":{"nominal":{"p":0.4545,"lo":0.1019,"hi":0.1058},"best-of-n":{"p":0.5909,"lo":0.1065,"hi":0.0986},"ours (pessimistic)":{"p":0.9545,"lo":0.0675,"hi":0.028}},"gt_success":{"nominal":{"p":0.0,"lo":0.0,"hi":0.0714},"best-of-n":{"p":0.0,"lo":0.0,"hi":0.0714},"ours (pessimistic)":{"p":0.1538,"lo":0.0748,"hi":0.1243}}},"Knife":{"gt_failure":{"nominal":{"p":0.8,"lo":0.1205,"hi":0.083},"best-of-n":{"p":0.9333,"lo":0.0951,"hi":0.0409},"ours (pessimistic)":{"p":1.0,"lo":0.0625,"hi":0.0}},"gt_success":{"nominal":{"p":0.125,"lo":0.0762,"hi":0.1595},"best-of-n":{"p":0.25,"lo":0.1192,"hi":0.1748},"ours (pessimistic)":{"p":0.5,"lo":0.1667,"hi":0.1667}}},"Pickup":{"gt_failure":{"nominal":{"p":0.6111,"lo":0.1178,"hi":0.1061},"best-of-n":{"p":0.6667,"lo":0.1173,"hi":0.0997},"ours (pessimistic)":{"p":0.9444,"lo":0.0809,"hi":0.0341}},"gt_success":{"nominal":{"p":0.125,"lo":0.0528,"hi":0.0828},"best-of-n":{"p":0.1667,"lo":0.0624,"hi":0.0891},"ours (pessimistic)":{"p":0.3333,"lo":0.0878,"hi":0.1012}}}}};
 
-const OPTIM_DATA = {"tasks":["jenga","knife","coffee","pickup","candy_gummy","candy_coffee"],"reward_keys":["robometer_progress","robometer_success_prob","topreward","rewind","qwen","classifier_failure"],"settings":[{"key":"mean_base","label":"base","color":"#0048a6"},{"key":"final_optim","label":"optim","color":"#ff9500"},{"key":"final_base","label":"nominal","color":"#0091ff"}],"qwen_flip_tasks":["candy_coffee","knife","candy_gummy","coffee"],"data":{"robometer_progress":{"jenga":{"base":{"mean":0.525459,"stderr":0.00311,"n":180},"optim":{"mean":0.503563,"stderr":0.006358,"n":36},"nominal":{"mean":0.546079,"stderr":0.006415,"n":36}},"knife":{"base":{"mean":0.343155,"stderr":0.006885,"n":115},"optim":{"mean":0.312358,"stderr":0.014248,"n":23},"nominal":{"mean":0.372316,"stderr":0.015744,"n":23}},"coffee":{"base":{"mean":0.522315,"stderr":0.007421,"n":105},"optim":{"mean":0.495722,"stderr":0.015721,"n":21},"nominal":{"mean":0.550285,"stderr":0.015258,"n":21}},"pickup":{"base":{"mean":0.392423,"stderr":0.004269,"n":210},"optim":{"mean":0.360367,"stderr":0.008377,"n":42},"nominal":{"mean":0.419596,"stderr":0.008461,"n":42}},"candy_gummy":{"base":{"mean":0.496632,"stderr":0.003299,"n":200},"optim":{"mean":0.462484,"stderr":0.006008,"n":40},"nominal":{"mean":0.517993,"stderr":0.006795,"n":40}},"candy_coffee":{"base":{"mean":0.471963,"stderr":0.003404,"n":200},"optim":{"mean":0.417424,"stderr":0.006783,"n":40},"nominal":{"mean":0.495524,"stderr":0.006626,"n":40}}},"robometer_success_prob":{"jenga":{"base":{"mean":0.060928,"stderr":0.001674,"n":180},"optim":{"mean":0.044916,"stderr":0.002754,"n":36},"nominal":{"mean":0.074744,"stderr":0.003975,"n":36}},"knife":{"base":{"mean":0.028665,"stderr":0.001069,"n":115},"optim":{"mean":0.022717,"stderr":0.001193,"n":23},"nominal":{"mean":0.03591,"stderr":0.002865,"n":23}},"coffee":{"base":{"mean":0.100764,"stderr":0.007998,"n":105},"optim":{"mean":0.077769,"stderr":0.014672,"n":21},"nominal":{"mean":0.125137,"stderr":0.018143,"n":21}},"pickup":{"base":{"mean":0.052629,"stderr":0.001322,"n":210},"optim":{"mean":0.039552,"stderr":0.001791,"n":42},"nominal":{"mean":0.065207,"stderr":0.00327,"n":42}},"candy_gummy":{"base":{"mean":0.062434,"stderr":0.001496,"n":200},"optim":{"mean":0.045142,"stderr":0.001976,"n":40},"nominal":{"mean":0.076073,"stderr":0.003638,"n":40}},"candy_coffee":{"base":{"mean":0.048509,"stderr":0.001352,"n":200},"optim":{"mean":0.032998,"stderr":0.001795,"n":40},"nominal":{"mean":0.058783,"stderr":0.003286,"n":40}}},"topreward":{"jenga":{"base":{"mean":-11.836206,"stderr":0.013282,"n":180},"optim":{"mean":-11.960511,"stderr":0.024556,"n":36},"nominal":{"mean":-11.708343,"stderr":0.030351,"n":36}},"knife":{"base":{"mean":-10.247053,"stderr":0.018588,"n":115},"optim":{"mean":-10.420551,"stderr":0.028368,"n":23},"nominal":{"mean":-10.107385,"stderr":0.039893,"n":23}},"coffee":{"base":{"mean":-10.469977,"stderr":0.040566,"n":105},"optim":{"mean":-10.72324,"stderr":0.07328,"n":21},"nominal":{"mean":-10.229957,"stderr":0.089759,"n":21}},"pickup":{"base":{"mean":-9.952154,"stderr":0.020048,"n":210},"optim":{"mean":-10.28428,"stderr":0.037539,"n":42},"nominal":{"mean":-9.769429,"stderr":0.040542,"n":42}},"candy_gummy":{"base":{"mean":-10.197777,"stderr":0.02008,"n":200},"optim":{"mean":-10.337537,"stderr":0.042391,"n":40},"nominal":{"mean":-10.053955,"stderr":0.043887,"n":40}},"candy_coffee":{"base":{"mean":-10.491048,"stderr":0.019392,"n":200},"optim":{"mean":-10.61917,"stderr":0.038394,"n":40},"nominal":{"mean":-10.326211,"stderr":0.045287,"n":40}}},"rewind":{"jenga":{"base":{"mean":0.304307,"stderr":0.003108,"n":180},"optim":{"mean":0.289474,"stderr":0.00541,"n":36},"nominal":{"mean":0.330581,"stderr":0.006372,"n":36}},"knife":{"base":{"mean":0.322414,"stderr":0.004925,"n":115},"optim":{"mean":0.292483,"stderr":0.011662,"n":23},"nominal":{"mean":0.348303,"stderr":0.010176,"n":23}},"coffee":{"base":{"mean":0.337054,"stderr":0.005277,"n":105},"optim":{"mean":0.297479,"stderr":0.010141,"n":21},"nominal":{"mean":0.3615,"stderr":0.011309,"n":21}},"pickup":{"base":{"mean":0.295119,"stderr":0.003589,"n":210},"optim":{"mean":0.250572,"stderr":0.006592,"n":42},"nominal":{"mean":0.326899,"stderr":0.007514,"n":42}},"candy_gummy":{"base":{"mean":0.407911,"stderr":0.005067,"n":200},"optim":{"mean":0.364323,"stderr":0.010075,"n":40},"nominal":{"mean":0.43581,"stderr":0.011328,"n":40}},"candy_coffee":{"base":{"mean":0.21139,"stderr":0.003173,"n":200},"optim":{"mean":0.16611,"stderr":0.00589,"n":40},"nominal":{"mean":0.243898,"stderr":0.005995,"n":40}}},"qwen":{"jenga":{"base":{"mean":1.986806,"stderr":0.304618,"n":180},"optim":{"mean":-11.999132,"stderr":0.765372,"n":36},"nominal":{"mean":3.869792,"stderr":0.534311,"n":36}},"knife":{"base":{"mean":1.804348,"stderr":0.162357,"n":115},"optim":{"mean":-0.404891,"stderr":0.481513,"n":23},"nominal":{"mean":0.903533,"stderr":0.31115,"n":23}},"coffee":{"base":{"mean":-0.23006,"stderr":0.725167,"n":105},"optim":{"mean":-4.78869,"stderr":1.419933,"n":21},"nominal":{"mean":-2.758929,"stderr":1.565681,"n":21}},"pickup":{"base":{"mean":5.326935,"stderr":0.101202,"n":210},"optim":{"mean":-1.469494,"stderr":0.351201,"n":42},"nominal":{"mean":6.506696,"stderr":0.205795,"n":42}},"candy_gummy":{"base":{"mean":5.311875,"stderr":0.09911,"n":200},"optim":{"mean":-6.857031,"stderr":0.499187,"n":40},"nominal":{"mean":4.290625,"stderr":0.209017,"n":40}},"candy_coffee":{"base":{"mean":6.503125,"stderr":0.440989,"n":200},"optim":{"mean":-2.014844,"stderr":0.762472,"n":40},"nominal":{"mean":3.666406,"stderr":1.035867,"n":40}}},"classifier_failure":{"jenga":{"base":{"mean":0.217237,"stderr":0.024505,"n":180},"optim":{"mean":0.12856,"stderr":0.040293,"n":36},"nominal":{"mean":0.32766,"stderr":0.061667,"n":36}},"knife":{"base":{"mean":0.680945,"stderr":0.03561,"n":115},"optim":{"mean":0.524649,"stderr":0.084955,"n":23},"nominal":{"mean":0.758971,"stderr":0.072522,"n":23}},"coffee":{"base":{"mean":0.455513,"stderr":0.04108,"n":105},"optim":{"mean":0.366907,"stderr":0.091108,"n":21},"nominal":{"mean":0.613412,"stderr":0.095299,"n":21}},"pickup":{"base":{"mean":0.122656,"stderr":0.018368,"n":210},"optim":{"mean":0.092477,"stderr":0.040682,"n":42},"nominal":{"mean":0.191344,"stderr":0.048701,"n":42}},"candy_gummy":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}},"candy_coffee":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}}}}};
+const OPTIM_DATA = {"tasks":["jenga","knife","coffee","pickup","candy_gummy","candy_coffee"],"reward_keys":["robometer_progress","robometer_success_prob","qwen","classifier_failure"],"settings":[{"key":"mean_base","label":"base","color":"#0048a6"},{"key":"final_optim","label":"optim","color":"#ff9500"},{"key":"final_base","label":"nominal","color":"#0091ff"}],"qwen_flip_tasks":["candy_coffee","knife","candy_gummy","coffee"],"data":{"robometer_progress":{"jenga":{"base":{"mean":0.525459,"stderr":0.00311,"n":180},"optim":{"mean":0.503563,"stderr":0.006358,"n":36},"nominal":{"mean":0.546079,"stderr":0.006415,"n":36}},"knife":{"base":{"mean":0.343155,"stderr":0.006885,"n":115},"optim":{"mean":0.312358,"stderr":0.014248,"n":23},"nominal":{"mean":0.372316,"stderr":0.015744,"n":23}},"coffee":{"base":{"mean":0.522315,"stderr":0.007421,"n":105},"optim":{"mean":0.495722,"stderr":0.015721,"n":21},"nominal":{"mean":0.550285,"stderr":0.015258,"n":21}},"pickup":{"base":{"mean":0.392423,"stderr":0.004269,"n":210},"optim":{"mean":0.360367,"stderr":0.008377,"n":42},"nominal":{"mean":0.419596,"stderr":0.008461,"n":42}},"candy_gummy":{"base":{"mean":0.496632,"stderr":0.003299,"n":200},"optim":{"mean":0.462484,"stderr":0.006008,"n":40},"nominal":{"mean":0.517993,"stderr":0.006795,"n":40}},"candy_coffee":{"base":{"mean":0.471963,"stderr":0.003404,"n":200},"optim":{"mean":0.417424,"stderr":0.006783,"n":40},"nominal":{"mean":0.495524,"stderr":0.006626,"n":40}}},"robometer_success_prob":{"jenga":{"base":{"mean":0.060928,"stderr":0.001674,"n":180},"optim":{"mean":0.044916,"stderr":0.002754,"n":36},"nominal":{"mean":0.074744,"stderr":0.003975,"n":36}},"knife":{"base":{"mean":0.028665,"stderr":0.001069,"n":115},"optim":{"mean":0.022717,"stderr":0.001193,"n":23},"nominal":{"mean":0.03591,"stderr":0.002865,"n":23}},"coffee":{"base":{"mean":0.100764,"stderr":0.007998,"n":105},"optim":{"mean":0.077769,"stderr":0.014672,"n":21},"nominal":{"mean":0.125137,"stderr":0.018143,"n":21}},"pickup":{"base":{"mean":0.052629,"stderr":0.001322,"n":210},"optim":{"mean":0.039552,"stderr":0.001791,"n":42},"nominal":{"mean":0.065207,"stderr":0.00327,"n":42}},"candy_gummy":{"base":{"mean":0.062434,"stderr":0.001496,"n":200},"optim":{"mean":0.045142,"stderr":0.001976,"n":40},"nominal":{"mean":0.076073,"stderr":0.003638,"n":40}},"candy_coffee":{"base":{"mean":0.048509,"stderr":0.001352,"n":200},"optim":{"mean":0.032998,"stderr":0.001795,"n":40},"nominal":{"mean":0.058783,"stderr":0.003286,"n":40}}},"topreward":{"jenga":{"base":{"mean":-11.836206,"stderr":0.013282,"n":180},"optim":{"mean":-11.960511,"stderr":0.024556,"n":36},"nominal":{"mean":-11.708343,"stderr":0.030351,"n":36}},"knife":{"base":{"mean":-10.247053,"stderr":0.018588,"n":115},"optim":{"mean":-10.420551,"stderr":0.028368,"n":23},"nominal":{"mean":-10.107385,"stderr":0.039893,"n":23}},"coffee":{"base":{"mean":-10.469977,"stderr":0.040566,"n":105},"optim":{"mean":-10.72324,"stderr":0.07328,"n":21},"nominal":{"mean":-10.229957,"stderr":0.089759,"n":21}},"pickup":{"base":{"mean":-9.952154,"stderr":0.020048,"n":210},"optim":{"mean":-10.28428,"stderr":0.037539,"n":42},"nominal":{"mean":-9.769429,"stderr":0.040542,"n":42}},"candy_gummy":{"base":{"mean":-10.197777,"stderr":0.02008,"n":200},"optim":{"mean":-10.337537,"stderr":0.042391,"n":40},"nominal":{"mean":-10.053955,"stderr":0.043887,"n":40}},"candy_coffee":{"base":{"mean":-10.491048,"stderr":0.019392,"n":200},"optim":{"mean":-10.61917,"stderr":0.038394,"n":40},"nominal":{"mean":-10.326211,"stderr":0.045287,"n":40}}},"rewind":{"jenga":{"base":{"mean":0.304307,"stderr":0.003108,"n":180},"optim":{"mean":0.289474,"stderr":0.00541,"n":36},"nominal":{"mean":0.330581,"stderr":0.006372,"n":36}},"knife":{"base":{"mean":0.322414,"stderr":0.004925,"n":115},"optim":{"mean":0.292483,"stderr":0.011662,"n":23},"nominal":{"mean":0.348303,"stderr":0.010176,"n":23}},"coffee":{"base":{"mean":0.337054,"stderr":0.005277,"n":105},"optim":{"mean":0.297479,"stderr":0.010141,"n":21},"nominal":{"mean":0.3615,"stderr":0.011309,"n":21}},"pickup":{"base":{"mean":0.295119,"stderr":0.003589,"n":210},"optim":{"mean":0.250572,"stderr":0.006592,"n":42},"nominal":{"mean":0.326899,"stderr":0.007514,"n":42}},"candy_gummy":{"base":{"mean":0.407911,"stderr":0.005067,"n":200},"optim":{"mean":0.364323,"stderr":0.010075,"n":40},"nominal":{"mean":0.43581,"stderr":0.011328,"n":40}},"candy_coffee":{"base":{"mean":0.21139,"stderr":0.003173,"n":200},"optim":{"mean":0.16611,"stderr":0.00589,"n":40},"nominal":{"mean":0.243898,"stderr":0.005995,"n":40}}},"qwen":{"jenga":{"base":{"mean":1.986806,"stderr":0.304618,"n":180},"optim":{"mean":-11.999132,"stderr":0.765372,"n":36},"nominal":{"mean":3.869792,"stderr":0.534311,"n":36}},"knife":{"base":{"mean":1.804348,"stderr":0.162357,"n":115},"optim":{"mean":-0.404891,"stderr":0.481513,"n":23},"nominal":{"mean":0.903533,"stderr":0.31115,"n":23}},"coffee":{"base":{"mean":-0.23006,"stderr":0.725167,"n":105},"optim":{"mean":-4.78869,"stderr":1.419933,"n":21},"nominal":{"mean":-2.758929,"stderr":1.565681,"n":21}},"pickup":{"base":{"mean":5.326935,"stderr":0.101202,"n":210},"optim":{"mean":-1.469494,"stderr":0.351201,"n":42},"nominal":{"mean":6.506696,"stderr":0.205795,"n":42}},"candy_gummy":{"base":{"mean":5.311875,"stderr":0.09911,"n":200},"optim":{"mean":-6.857031,"stderr":0.499187,"n":40},"nominal":{"mean":4.290625,"stderr":0.209017,"n":40}},"candy_coffee":{"base":{"mean":6.503125,"stderr":0.440989,"n":200},"optim":{"mean":-2.014844,"stderr":0.762472,"n":40},"nominal":{"mean":3.666406,"stderr":1.035867,"n":40}}},"classifier_failure":{"jenga":{"base":{"mean":0.217237,"stderr":0.024505,"n":180},"optim":{"mean":0.12856,"stderr":0.040293,"n":36},"nominal":{"mean":0.32766,"stderr":0.061667,"n":36}},"knife":{"base":{"mean":0.680945,"stderr":0.03561,"n":115},"optim":{"mean":0.524649,"stderr":0.084955,"n":23},"nominal":{"mean":0.758971,"stderr":0.072522,"n":23}},"coffee":{"base":{"mean":0.455513,"stderr":0.04108,"n":105},"optim":{"mean":0.366907,"stderr":0.091108,"n":21},"nominal":{"mean":0.613412,"stderr":0.095299,"n":21}},"pickup":{"base":{"mean":0.122656,"stderr":0.018368,"n":210},"optim":{"mean":0.092477,"stderr":0.040682,"n":42},"nominal":{"mean":0.191344,"stderr":0.048701,"n":42}},"candy_gummy":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}},"candy_coffee":{"base":{"mean":null,"stderr":null,"n":0},"optim":{"mean":null,"stderr":null,"n":0},"nominal":{"mean":null,"stderr":null,"n":0}}}}};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FAILURE DETECTION CHARTS (all 6 tasks)
@@ -1147,7 +1190,7 @@ function buildFailureDetection(container) {
   function renderFailureChart(gtKey) {
     h3.textContent = gtKey === 'gt_failure'
       ? 'G.T. Failure (higher = better recall)'
-      : 'G.T. Success (lower = fewer false positives)';
+      : 'G.T. Success (Despite success, some trajectories still risk failures.)';
 
     const datasets = orderedMethods.map(m => {
       const srcMethod = methodMap[m];
@@ -1236,10 +1279,11 @@ function buildRewardCharts(container) {
   const rwLabel = document.createElement('label');
   rwLabel.textContent = 'Reward:';
   const rwSelect = document.createElement('select');
+  const REWARD_KEY_LABELS = { classifier_failure: 'task success classifier (dinov3 finetuned)' };
   data.reward_keys.forEach(k => {
     const opt = document.createElement('option');
     opt.value = k;
-    opt.textContent = k.replace(/_/g, ' ');
+    opt.textContent = REWARD_KEY_LABELS[k] || k.replace(/_/g, ' ');
     rwSelect.appendChild(opt);
   });
   rewardRow.appendChild(rwLabel);
@@ -1653,8 +1697,8 @@ function buildPolicyRollout() {
   const section = document.createElement('div');
   section.className = 'section';
   section.id = 'policy-rollout';
-  section.innerHTML = `<h2 class="section-title">Robust Policy Learning</h2>
-    <p class="section-subtitle">Rollout examples per task comparing risk-neutral (nominal) vs risk-averse (robust) policies, finetuning <a href="https://github.com/Physical-Intelligence/openpi" target="_blank" rel="noopener noreferrer">pi05</a> policy with behavior cloning vs. weighted behavior cloning with pessimistic world model steering.</p>`;
+  section.innerHTML = `<h2 class="section-title">2. Policy Improvement</h2>
+    <p class="section-subtitle">StressDream's robust evaluation capability leads to policy improvement. Weighting behavior cloning by video world model imaginations with steered rollouts promotes robust actions that avoid potential failures, improving a <a href="https://github.com/Physical-Intelligence/openpi" target="_blank" rel="noopener noreferrer">π₀.₅</a> VLA policy from <strong>39%→71%</strong> success rate, where nominal model often conducts risky actions. Rollout examples compare nominal vs. robust policies across tasks.</p>`;
 
   // ── View toggle (above task selector) ──
   const viewRow = document.createElement('div');
@@ -1791,7 +1835,7 @@ function buildPolicyRollout() {
 
   const legend = document.createElement('div');
   legend.className = 'chart-legend';
-  [{ color: '#0091ff', label: 'Nominal' }, { color: '#ff9500', label: 'Robust (Pessimistic)' }].forEach(({ color, label }) => {
+  [{ color: '#0091ff', label: 'Nominal' }, { color: '#ff9500', label: 'Robust' }].forEach(({ color, label }) => {
     const it = document.createElement('div');
     it.className = 'chart-legend-item';
     it.innerHTML = `<div class="chart-legend-swatch" style="background:${color}"></div>${label}`;
@@ -1947,18 +1991,74 @@ function buildPolicyRollout() {
 function build() {
   const root = document.getElementById('content');
 
-  // ── Step-by-Step ──
+  // ── Overview ──
+  const sOverview = document.createElement('div');
+  sOverview.className = 'section'; sOverview.id = 'overview';
+  sOverview.innerHTML = `<h2 class="section-title"></h2>
+    <div style="margin-bottom:24px;">
+      <img src="figures/main.jpg" style="width:100%;border-radius:10px;" alt="StressDream overview figure">
+    </div>
+    <div class="contrib-grid">
+      <div class="contrib-card">
+        <div class="contrib-card-tag">Method</div>
+        <div class="contrib-card-body">We formalize the first <strong>inference-time steering method for video world models</strong>, optimizing initial diffusion noise toward plausible, high-impact outcomes via both semantic (with VLMs) and distributional (Gaussian typical-set) objectives.</div>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-card-tag">Policy Evaluation</div>
+        <div class="contrib-card-body"><strong>54%→94% failure-recall</strong> through video world model imaginations for robotic manipulation and autonomous driving. StressDream steers the video world model generations toward inference-time specified, scene-dependent critical outcomes only when they are plausible.</div>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-card-tag">Policy Improvement</div>
+        <div class="contrib-card-body">Robust evaluation leads to policy improvement — upweighting behavior cloning with robust actions based on steered imaginations raises a <a href="https://github.com/Physical-Intelligence/openpi" target="_blank" rel="noopener noreferrer">π₀.₅</a> VLA policy success rate from <strong>39%→71%</strong>.</div>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-card-tag">Benchmarks</div>
+        <div class="contrib-card-body">Validated on three video world models: <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista</a> (autonomous driving), <a href="https://ctrl-world.github.io/" target="_blank" rel="noopener noreferrer">Ctrl-World</a> (robotic manipulation), and a <a href="dubins/index.html">Dubins Car</a> simulation.</div>
+      </div>
+    </div>`;
+  root.appendChild(sOverview);
+
+  // ── Method: Noise Optimization ──
   const s4 = document.createElement('div');
   s4.className = 'section'; s4.id = 'step-by-step';
-  s4.innerHTML = `<h2 class="section-title">Noise Optimization for Steering Uncertain World Models</h2>
+  s4.innerHTML = `<h2 class="section-title">Method: Noise Optimization for Steering World Models</h2>
     <p class="section-subtitle">We steer diffusion-based world model generations by optimizing the initial noise, leaving model weights unchanged. Because different initial noises yield different rollouts, gradient ascent on a criterion (e.g., a VLM score) can push the generation toward maximizing the score. However, the noise space is high-dimensional: its probability mass concentrates on a thin shell (the <em>typical set</em>), leaving the interior and the far exterior as low-density, out-of-distribution regions. Naive optimization without regularization drifts off this shell, producing implausible generations.</p>`;
   s4.appendChild(buildStepByStep());
+
+  const typicalBlurb = document.createElement('div');
+  typicalBlurb.style.cssText = 'margin-top:28px;border-top:1px solid var(--border);padding-top:20px;';
+  typicalBlurb.innerHTML = `
+    <h3 style="font-size:1rem;font-weight:700;margin:0 0 8px;letter-spacing:-0.01em;">What is the Typical Set?</h3>
+    <p style="font-size:0.88rem;color:var(--text-sec);line-height:1.7;margin:0 0 14px;">
+       Although Gaussian density is highest at the mean, <strong>0</strong>, high-dimensional samples
+  almost never look like the mean. They must also satisfy aggregate statistics of the prior,
+  such as having norm about &radic;<i>d</i>. Thus, shrinking diffusion noise toward zero may
+  increase density but make the noise atypical under the prior, pushing generation outside the
+  regime the model was trained on and leading to implausible outputs. See more details in the link below.
+    </p>`;
+  s4.appendChild(typicalBlurb);
+
+  const typicalBtn = document.createElement('div');
+  typicalBtn.style.cssText = 'margin-top:4px;';
+  typicalBtn.innerHTML = `<a class="hero-btn" href="gaussian_typical_set/index.html" target="_blank" rel="noopener noreferrer">Never look down on Gaussian distribution: a long story about the typical set of high-dimensional Gaussian distribution &#8599;</a>`;
+  s4.appendChild(typicalBtn);
+
   root.appendChild(s4);
 
-  // ── Manipulation (with task selector) ──
+  // ── 1. Policy Evaluation ──
+  const sPolicyEval = document.createElement('div');
+  sPolicyEval.className = 'section'; sPolicyEval.id = 'policy-eval';
+  sPolicyEval.innerHTML = `<h2 class="section-title">1. Policy Evaluation</h2>
+    <p class="section-subtitle">StressDream steers WM imaginations conditioned on given action sequences toward plausible critical events defined by a inference-time text prompt describing the target event, enabling robust detection of failure-prone actions. </p>
+    <div style="margin-bottom:4px;">
+      <img src="figures/inner-opt.jpg" style="width:100%;border-radius:10px;" alt="Policy evaluation — StressDream vs. baselines">
+    </div>`;
+  root.appendChild(sPolicyEval);
+
+  // ── 1-1. Robotic Manipulation ──
   const s1 = document.createElement('div');
   s1.className = 'section'; s1.id = 'manipulation';
-  s1.innerHTML = `<h2 class="section-title">Manipulation</h2>
+  s1.innerHTML = `<h2 class="section-title">1-1. Robotic Manipulation</h2>
     <p class="section-subtitle">Comparison of ground-truth, nominal, and steered rollouts for robotic manipulation tasks (using <a href="https://ctrl-world.github.io/" target="_blank" rel="noopener noreferrer">Ctrl-World</a>).</p>`;
 
   // Task selector buttons
@@ -2002,13 +2102,12 @@ function build() {
   // ── Quantitative Results ──
   const sq = document.createElement('div');
   sq.className = 'section'; sq.id = 'quantitative';
-  sq.innerHTML = `<h2 class="section-title">Quantitative Results</h2>
-    <p class="section-subtitle">Failure detection rates and reward comparisons across methods.</p>`;
+  sq.innerHTML = `<h2 class="section-title">Quantitative Results</h2>`;
 
   const fdTitle = document.createElement('h3');
   fdTitle.className = 'subsection-title'; fdTitle.textContent = 'Failure Detection';
   const fdSub = document.createElement('p');
-  fdSub.className = 'subsection-subtitle'; fdSub.textContent = 'Can steering robustly detect failures in the world model imaginations? We conduct open-loop rollout only using the initial image and action trajectories of offline trajectories, and test if pessimistic steering can robustly detect failures in the world model imaginations. Two-panel view: ground-truth failure (detection) and ground-truth success (false positives), matching the quantitative viewer style.';
+  fdSub.className = 'subsection-subtitle'; fdSub.textContent = 'Can steering robustly detect failures in the world model imaginations? We conduct open-loop rollout only using the initial image and action trajectories of offline trajectories, and test if StressDream can robustly detect failures in the world model imaginations.';
   const fdHost = document.createElement('div');
   sq.appendChild(fdTitle); sq.appendChild(fdSub); sq.appendChild(fdHost);
   buildFailureDetection(fdHost);
@@ -2016,31 +2115,53 @@ function build() {
   const rwTitle = document.createElement('h3');
   rwTitle.className = 'subsection-title'; rwTitle.textContent = 'Reward Function';
   const rwSub = document.createElement('p');
-  rwSub.className = 'subsection-subtitle'; rwSub.textContent = 'We compare the reward estimates on the generated rollouts. Only Qwen is used for the optimization, while the others are not used during the steering. It shows the rewards of the steered generations are lower than baselines, showing the steering can generate pessimistic rollouts more effectively.';
+  rwSub.className = 'subsection-subtitle'; rwSub.textContent = 'We compare the reward estimates on the generated rollouts. Only Qwen is used for the optimization, while the others are not used during the steering. It shows the rewards of the steered generations are lower than baselines, showing the steering can effectively guide the video world model to generate more task-failure events when the failure is plausible.';
   const rwHost = document.createElement('div');
   sq.appendChild(rwTitle); sq.appendChild(rwSub); sq.appendChild(rwHost);
   buildRewardCharts(rwHost);
 
   root.appendChild(sq);
 
-  // ── Policy Rollout ──
-  root.appendChild(buildPolicyRollout());
+  // ── 1-2. Autonomous Driving (quantitative figures) ──
+  const sDrivingEval = document.createElement('div');
+  sDrivingEval.className = 'section'; sDrivingEval.id = 'driving-eval';
+  sDrivingEval.innerHTML = `<h2 class="section-title">1-2. Autonomous Driving</h2>
+    <p class="section-subtitle">StressDream steers the <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista</a> driving world model toward safety-critical events across 8 categories (100 image–text pairs, PAI-AV dataset) and 200 imminent-collision examples (Nexar). Evaluated with WorldModelBench — target alignment scores whether the generated video matches the target event description; video quality serves as a proxy for plausibility.</p>
+    <div style="margin-bottom:28px;text-align:center;">
+      <img src="figures/vista-full-results.png" style="width:50%;border-radius:10px;display:block;margin:0 auto;" alt="Vista full results — StressDream vs. baselines">
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-top:8px;line-height:1.6;"><strong>Steering driving world models.</strong> StressDream steers Vista generations toward target safety-critical events more effectively than Best-of-<em>N</em> random sampling. The distributional objective preserves video quality while improving target alignment.</p>
+    </div>
+    <div style="text-align:center;">
+      <img src="figures/vista-longtail.png" style="width:40%;border-radius:10px;display:block;margin:0 auto;" alt="Long-tail event discovery">
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-top:8px;line-height:1.6;"><strong>Long-tail event discovery.</strong> StressDream discovers rare events (pedestrian crossing, traffic-light change, collision) substantially more efficiently than Best-of-40 random sampling — demonstrating that first-order noise optimization outperforms zeroth-order search for rare event generation.</p>
+    </div>`;
+  root.appendChild(sDrivingEval);
 
-  // ── Driving Unconditional ──
+  // ── Autonomous Driving — video examples ──
   const s2 = document.createElement('div');
   s2.className = 'section'; s2.id = 'driving-unconditional';
-  s2.innerHTML = `<h2 class="section-title">Autonomous Driving</h2>
-    <p class="section-subtitle">Nominal vs. Pessimistic Steering using <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista world model</a>. Scenes are from <a href="https://huggingface.co/datasets/nexar-ai/nexar_collision_prediction" target="_blank" rel="noopener noreferrer">Nexar Collision Prediction</a> or <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank" rel="noopener noreferrer">PAI (PhysicalAI-Autonomous-Vehicles)</a>.</p>`;
+  s2.innerHTML = `<h2 class="section-title">Qualitative Results</h2>
+    <p class="section-subtitle">Nominal vs. steered rollouts using the <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista world model</a>. Scenes are from <a href="https://huggingface.co/datasets/nexar-ai/nexar_collision_prediction" target="_blank" rel="noopener noreferrer">Nexar Collision Prediction</a> or <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank" rel="noopener noreferrer">PAI (PhysicalAI-Autonomous-Vehicles)</a>.</p>`;
   s2.appendChild(buildDrivingUncondPanel());
   root.appendChild(s2);
 
-  // ── Driving Conditional ──
+  // ── Autonomous Driving — Robust Evaluation ──
   const s3 = document.createElement('div');
   s3.className = 'section'; s3.id = 'driving-conditional';
-  s3.innerHTML = `<h2 class="section-title">Autonomous Driving (Robust Decision Making)</h2>
-    <p class="section-subtitle">Nominal vs. Pessimistic Steering using <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista world model</a>, under different action choices per scenario. Scenes are from <a href="https://huggingface.co/datasets/nexar-ai/nexar_collision_prediction" target="_blank" rel="noopener noreferrer">Nexar Collision Prediction</a> or <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank" rel="noopener noreferrer">PAI (PhysicalAI-Autonomous-Vehicles)</a>.</p>`;
+  s3.innerHTML = `<h2 class="section-title">Robust Action Evaluation with Steering</h2>
+    <p class="section-subtitle">StressDream can robustly evaluate actions by steering the video world model toward safety-critical outcomes. <br> Nominal vs. steered rollouts using the <a href="https://opendrivelab.com/Vista/" target="_blank" rel="noopener noreferrer">Vista world model</a>, under different action choices per scenario. StressDream identifies which candidate actions lead to safety-critical outcomes, enabling robust action selection.</p>`;
   s3.appendChild(buildDrivingCondPanel());
   root.appendChild(s3);
+
+  // ── 2. Policy Improvement ──
+  const sPolicyImprove = buildPolicyRollout();
+  sPolicyImprove.id = 'policy-improve';
+  const piFig = document.createElement('div');
+  piFig.style.cssText = 'margin-bottom:24px;';
+  piFig.innerHTML = `<img src="figures/pi-qualitative.jpg" style="width:100%;border-radius:10px;" alt="Policy improvement qualitative results">
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-top:8px;line-height:1.6;"><strong>Policy improvement via robust evaluation.</strong> VLA policy finetuning with StressDream improves the <a href="https://github.com/Physical-Intelligence/openpi" target="_blank" rel="noopener noreferrer">π₀.₅</a> VLA policy robustly. Rollout examples compare nominal vs. robust policies across tasks.</p>`;
+  sPolicyImprove.insertBefore(piFig, sPolicyImprove.children[2]);
+  root.appendChild(sPolicyImprove);
 
 }
 

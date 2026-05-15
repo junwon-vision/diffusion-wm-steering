@@ -55,6 +55,12 @@
       transition: color 0.15s, border-color 0.15s;
     }
     nav a:hover, nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+    nav a.nav-sub {
+      font-size: 0.75rem; font-weight: 500;
+      color: var(--text-dim); padding: 14px 0;
+      border-bottom: 2px solid transparent;
+    }
+    nav a.nav-sub:hover, nav a.nav-sub.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     .hero {
       text-align: center; padding: 60px 24px 40px;
@@ -75,6 +81,13 @@
     .section-subtitle { font-size: 0.92rem; color: var(--text-sec); margin-bottom: 24px; }
     .section-subtitle p { margin: 0 0 0.85em; }
     .section-subtitle p:last-child { margin-bottom: 0; }
+    .section-subtitle a, .subsection-subtitle a, .panel-caption a, .panel-header a {
+      color: var(--accent); text-decoration: none;
+      border-bottom: 1px solid transparent; transition: border-color 0.15s, color 0.15s;
+    }
+    .section-subtitle a:hover, .subsection-subtitle a:hover, .panel-caption a:hover, .panel-header a:hover {
+      border-bottom-color: var(--accent);
+    }
 
     .panel {
       background: var(--bg); border: 1px solid var(--border);
@@ -536,13 +549,13 @@
   <div class="nav-inner">
     <a href="../index.html">&larr; Home</a>
     <a href="#dynamics">Dynamics</a>
-    <a href="#demo">Interactive Demo</a>
-    <a href="#results">Results</a>
-    <a href="#qual-results">Qualitative</a>
-    <a href="#steering">Steering</a>
-    <a href="#regularizer">Regularizer</a>
-    <a href="#failure">Failure Detection</a>
-    <a href="#ablations">Ablations</a>
+    <a href="#demo">Noise Optimization</a>
+    <a href="#qual-results" class="nav-sub">Qualitative</a>
+    <a href="#results-fig">Results</a>
+    <a href="#steering" class="nav-sub">Steering</a>
+    <a href="#failure" class="nav-sub">TPR vs TNR</a>
+    <a href="#regularizer" class="nav-sub">Typical Set Constraints</a>
+    <a href="#ablations" class="nav-sub">Ablations</a>
   </div>
 </nav>
 
@@ -551,8 +564,7 @@
     <span class="hero-icon" style="display:flex;align-items:center;justify-content:center;font-size:52px;line-height:1">😈</span>
     <h1>Naughty Dubins Car</h1>
   </div>
-  <p>How well does diffusion world model steering work? We study this in a comprehensive manner with a simulated navigation task with stochastic dynamics. <br><br>
-    Robots are often mischievous—they do not always behave as intended, and may even do the opposite of what we ask. <br><b><i>Naughty</i> Dubins car</b> is a Dubins car with a circular failure region at the center of the environment, and a "naughty" behavior: with a small probability, the sign of its angular velocity action is flipped, which introduces uncertainty in dynamics. With this in mind, we investigate how effectively we can steer the world model to imagine possible future trajectories.</p>
+  <p>We study diffusion world model steering in a controlled setting where the ground-truth system dynamics are known — directly assessing whether steering can explore a pretrained video world model to identify potential failures while preserving plausibility.</p>
 </div>
 
 <div class="content">
@@ -733,35 +745,47 @@
       </div>
     </div>
 
+    <!-- ── Main Results Figure ── -->
+    <span id="results"></span>
+    <div class="subsection" id="results-fig">
+      <div class="subsection-title">Main Results</div>
+      <div class="subsection-subtitle">
+        <p>Noise optimization with the typical-set regularizer steers WM imaginations plausibly toward the failure set, robustly detecting possible failures that random generations miss.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Results: Naughty Dubins Car</div>
+        <div class="panel-body" style="text-align:center;padding:24px 18px">
+          <img src="../figures/dubins-main.png" style="max-width:100%;display:block;margin:0 auto;border-radius:6px" alt="Dubins Car Main Results Figure">
+        </div>
+        <div class="panel-caption">
+          <b>(a)</b> Average minimum safety score over imagined trajectories. Noise optimization with regularizer (orange) steers toward lower safety scores while staying within plausible bounds (dashed GT line). Noise optimization without the typical-set objective (teal) and classifier guidance (red) both drive the score below the GT bound—indicating physically implausible imaginations. <b>(b)</b> True positive rate (failure detection) vs. true negative rate (plausibility). Noise optimization with regularizer achieves accurate failure detection with near-nominal FPR. <b>(c)</b> Qualitative comparison of imagined trajectory distributions.
+        </div>
+      </div>
+    </div>
+
     <!-- ── Steering ── -->
     <div class="subsection" id="steering">
-      <div class="subsection-title">How well does initial noise optimization work?</div>
-    <div class="section-subtitle">We tested steering of naughty dubins car world model with the initial noise optimization, with 5000 randomly sampled evaluation trajectories. The goal is to test if steering can maximize/minimize the criterion (safety margin) while keeping plausibility in imaginations (i.e., do not steer more than the physical limits). </div>
+      <div class="subsection-title">How well does noise optimization steer toward failures?</div>
+    <div class="section-subtitle">We evaluate steering on 5000 randomly sampled evaluation trajectories. Each trajectory is rolled out in the world model from the initial image $\mathbf{o}_0$ under the same action sequence. Steering minimizes the learned safety-score predictor for 10 optimization steps, driving imaginations toward the failure set. The dashed GT line marks the worst-case minimum safety score achievable under the true stochastic dynamics — a plausible steering result should approach but not cross this bound.</div>
 
     <div class="callout">
-      Aggregating over 5000 random evaluation trajectories: the maximum safety margin reached per trajectory (averaged). Dashed line = ground-truth optimistic minimum / pessimistic maximum under true dynamics. Hover any bar for an explanation.
+      Average minimum safety score over each imagined trajectory (5000 trajectories). Lower values are better — they indicate the world model imagined outcomes closer to the failure set. Dashed line = ground-truth worst-case bound. Hover any bar for details.
       <br><br>
-      <strong>Why is it hard?</strong> Unlike single-step Vista / Ctrl-World settings, this is <strong>long-horizon</strong>. Without effective steering, rollout branches grow exponentially, so best-of-N sampling cannot discover the pessimistic or optimistic modes of the imagined distribution.
+      <strong>Why is it hard?</strong> This is a <strong>long-horizon</strong> autoregressive rollout. The exponential branching from stochastic dynamics makes it practically impossible for Best-of-N sampling to discover the dangerous modes of the imagined distribution.
     </div>
 
     <div class="panel">
-      <div class="panel-header" id="steering-header">Margin — max over trajectory (full, 5000 samples)</div>
-      <div class="panel-tabs" data-tabs-for="steering">
-        <button class="tab active" data-key="opt">Optimistic (minimize margin)</button>
-        <button class="tab" data-key="pess">Pessimistic (maximize margin)</button>
-        <span class="tab-spacer"></span>
-        <span class="tab-meta">Dashed = GT empirical bound</span>
-      </div>
+      <div class="panel-header">Min. safety score over trajectory — 5000 trajectories &nbsp;<span style="font-weight:400;color:var(--text-dim);font-size:0.85em">Dashed = GT bound</span></div>
       <div class="panel-body"><div class="chart-wrap"><canvas id="c_steering"></canvas></div></div>
       <div class="panel-caption">
-        <span class="c-ok"><b>With regularizer (orange)</b></span> pushes the margin toward the GT bound while staying on the plausible side of it. <span class="c-ood"><b>No regularizer (green)</b></span> trivially overshoots the GT bound — the optimized noise leaves the in-distribution manifold and predicts margins beyond the physical limits. Nominal / Best-of-N are effectively indistinguishable, confirming that naive sampling cannot steer this long-horizon imagination.
+        <span class="c-ok"><b>Noise optim with reg (orange)</b></span> steers toward the GT bound while staying within physically plausible limits. <span class="c-ood"><b>No reg (teal)</b></span> overshoots the GT bound — optimized noise leaves the in-distribution manifold yielding physically impossible safety scores. <b>Classifier guidance (red)</b> similarly drives the score below the GT bound, indicating out-of-distribution imaginations. Nominal and Best-of-N are nearly indistinguishable, confirming naive sampling cannot steer long-horizon rollouts.
       </div>
     </div>
   </div>
 
     <!-- ── Regularizer ── -->
     <div class="subsection" id="regularizer">
-      <div class="subsection-title">How well does the regularizer work?</div>
+      <div class="subsection-title">Typical Set Constraints</div>
     <div class="section-subtitle">We tested the regularizer on the naughty dubins car world model, with 5000 randomly sampled evaluation trajectories. Spectral density, isotropy, and norm are optimization regularizer terms used during steering. Out-of-distribution score (measured by density estimation via flow matching) is not used for optimization; it is an evaluation-only check for whether the regularizer keeps generations in-distribution.</div>
 
     <div class="panel">
@@ -779,10 +803,10 @@
 
     <!-- ── Failure Detection ── -->
     <div class="subsection" id="failure">
-      <div class="subsection-title">How <i>robustly</i> can we detect failure events using world model steering?</div>
+      <div class="subsection-title">How robustly can we detect failure events?</div>
     <div class="section-subtitle">
-      To evaluate the robustness of failure detection, we tested pessimistic steering on the naughty Dubins car world model, using 5000 randomly sampled evaluation trajectories. Each trajectory is labeled as <b>positive</b> if it has a non-zero probability of entering the failure set under the true dynamics, and <b>negative</b> if—despite the naughty behavior—entry is impossible.<br><br>
-      For each case, we steer the model's imagination using just the action sequence and initial state, and classify the trajectory as positive or negative. Ideally, pessimistic steering will imagine failures for positives (TPR↑) without falsely predicting failures for negatives (FPR↓). When steering is performed without the regularizer (green), the optimization tends to overshoot the ground-truth bound: optimized noise leaves the in-distribution manifold, predicting margins beyond physical limits—this inflates both TPR and FPR.
+      We evaluate failure detection on 5000 randomly sampled evaluation trajectories. Each trajectory is labeled <b>positive</b> if it has a non-zero probability of entering the failure set $\mathcal{F}$ under the true stochastic dynamics (ground-truth minimum safety score ≤ 0), and <b>negative</b> otherwise.<br><br>
+      We steer the world model's imagination using only the initial observation and action sequence, then classify the trajectory as a predicted failure if the minimum predicted safety score along the rollout is below zero. Noise optimization with the typical-set regularizer achieves high TPR while keeping FPR near the nominal level. Both noise optimization without the regularizer and classifier guidance trivially drive the safety score downward, but with a high false-positive rate — indicating physically implausible imaginations.
     </div>
 
     <div class="stat-row">
@@ -792,14 +816,10 @@
     </div>
 
     <div class="panel">
-      <div class="panel-header" id="failure-header">Pessimistic steering — True Positive Rate (margin threshold 0)</div>
-      <div class="panel-tabs" data-tabs-for="failure">
-        <button class="tab active" data-key="tpr">True Positive Rate &uarr;</button>
-        <button class="tab" data-key="fpr">False Positive Rate &darr;</button>
-      </div>
-      <div class="panel-body"><div class="chart-wrap"><canvas id="c_failure"></canvas></div></div>
+      <div class="panel-header">TPR vs TNR</div>
+      <div class="panel-body"><div class="chart-wrap tall"><canvas id="c_tpr_tnr"></canvas></div></div>
       <div class="panel-caption">
-        <span class="c-ok"><b>With reg</b></span> keeps FPR at the nominal level (~3.8&#8239;%) — imagined failures are trustworthy. <span class="c-ood"><b>No reg</b></span> inflates TPR only by collapsing into implausible latents, pushing FPR to 26.5&#8239;%.
+        True positive rate (failure detection, x-axis) vs. true negative rate (plausibility, y-axis). Upper-right corner is ideal. <span class="c-ok"><b>Noise optim with reg (orange)</b></span> achieves the best balance: TPR&nbsp;88.8% with TNR&nbsp;92.8% — imagined failures are trustworthy. Methods without the typical-set objective <span class="c-ood">(teal, red)</span> trade dramatically higher false-positive rates for marginal TPR gains, revealing implausible imaginations. Error bars are 95% Wilson confidence intervals.
       </div>
     </div>
   </div>
@@ -807,10 +827,10 @@
     <!-- ── Ablations ── -->
     <div class="subsection" id="ablations">
       <div class="subsection-title">Ablations — which regularizer term matters?</div>
-    <div class="section-subtitle">Out-of-distribution score of the generated latents. Each ablation removes one term from the regularizer; the rest are kept.</div>
+    <div class="section-subtitle">OOD score (measured via <a href="https://github.com/CXU-TRI/FAIL-Detect" target="_blank" rel="noopener">FAIL-Detect</a> flow-matching density estimation) of the generated latents. Each ablation removes one term from the typical-set constraint; the rest are kept.</div>
 
     <div class="panel">
-      <div class="panel-header">Out-of-distribution score via density estimation — full ablation sweep</div>
+      <div class="panel-header">OOD Score (via Flow-based Density Estimation) — full ablation sweep</div>
       <div class="panel-body"><div class="chart-wrap tall"><canvas id="c_ablation"></canvas></div></div>
       <div class="panel-caption">
         Dropping any single regularizer term (<b>no&nbsp;norm</b>, <b>no&nbsp;spectral</b>, <b>no&nbsp;std</b>) lets the density drift above the <b>with&nbsp;reg</b> baseline (&asymp;172). Removing regularization entirely (<b>no&nbsp;reg</b>) sends density to &asymp;697 — roughly 4&times; inflation, confirming that each term contributes to keeping steered latents in-distribution.
@@ -852,32 +872,34 @@ function hideTip() { tipEl.classList.remove('show'); }
 // ── Plain-English explanations for every method label ────────────────────────
 const labelHelp = {
   'Nominal (N=1)':
-    'A single forward rollout from the world model with no noise-space steering. This is the policy baseline — what the world model produces by default.',
+    'A single forward rollout from the world model with no noise-space steering. Baseline — what the world model produces by default with a random initial noise.',
   'Best-of-N (N=10)':
-    'Best (most extreme) rollout selected from 10 independent samples of the nominal world model. No latent steering — relies on luck to discover the relevant tail of the distribution.',
-  'Steered (no reg)':
-    'Noise-space steering that optimizes the latent for the target margin WITHOUT the manifold regularizer. The optimizer is free to push noise off the in-distribution shell, producing physically implausible rollouts.',
-  'Steered (with reg)':
-    'Noise-space steering with the full manifold regularizer (χ² norm + spectral + per-dim std). Latents are kept close to the nominal Gaussian shell, so the imagined rollouts remain physically plausible.',
+    'Best (most extreme) rollout selected from 10 independent samples of the nominal world model. No latent steering — relies on random sampling to discover the relevant tail of the distribution.',
+  'Noise Optim (No Typical Set)':
+    'Noise-space steering (initial noise optimization) WITHOUT the typical-set regularizer. The optimizer is free to push noise off the in-distribution shell, producing physically implausible rollouts with safety scores beyond the ground-truth bound.',
+  'Noise Optim':
+    'Noise-space steering with the full typical-set regularizer (χ² norm + spectral + per-dim std). Latents are kept close to the nominal Gaussian shell, so imagined rollouts remain physically plausible.',
   'Steered (no norm)':
-    'Ablation of the χ² norm term: regularizer keeps spectral and per-dim-std penalties only.',
+    'Ablation: χ² norm term removed. Regularizer retains spectral-density and per-dim-std penalties only.',
   'Steered (no spectral)':
-    'Ablation of the spectral-norm term: regularizer keeps χ² norm and per-dim-std penalties only.',
+    'Ablation: spectral-norm term removed. Regularizer retains χ² norm and per-dim-std penalties only.',
   'Steered (no std)':
-    'Ablation of the per-dimension std term: regularizer keeps χ² norm and spectral-norm penalties only.'
+    'Ablation: per-dimension std term removed. Regularizer retains χ² norm and spectral-norm penalties only.',
+  'Classifier Guidance':
+    'Classifier guidance: safety-score gradients are applied directly during the denoising process (one-step variant) rather than optimizing the initial noise. Drives the safety score in the target direction but without the typical-set constraint.'
 };
 
 // ── Per-metric context (shown after the value in the tooltip) ────────────────
 const metricInfo = {
   margin_opt: {
-    name: 'Margin',
+    name: 'Safety score (mean of min over trajectory)',
     fmt: (v) => v.toFixed(3),
-    help: 'Optimistic steering tries to MINIMIZE the (negative) margin — a value below the GT min would be a physically impossible rollout.'
+    help: 'Optimistic steering tries to MAXIMIZE the safety score. Values above the GT min line indicate physically implausible imaginations — the model predicts safer outcomes than the true dynamics allow.'
   },
   margin_pess: {
-    name: 'Margin',
+    name: 'Safety score (mean of min over trajectory)',
     fmt: (v) => v.toFixed(3),
-    help: 'Pessimistic steering tries to MAXIMIZE the margin — a value above the GT max would be a physically impossible rollout.'
+    help: 'Pessimistic steering tries to MINIMIZE the safety score (toward the failure set at 0). Values below the GT max line indicate physically implausible imaginations — the model predicts worse outcomes than true dynamics allow.'
   },
   reg_spectral: {
     name: 'Spectral density',
@@ -919,9 +941,9 @@ const metricInfo = {
 // ── GT-line tooltip context ──────────────────────────────────────────────────
 function gtHelp(metricKey) {
   if (metricKey === 'margin_opt')
-    return 'Empirical GT minimum margin: across 10 000 GT stochastic rollouts of every eval trajectory, the smallest max-over-trajectory margin actually achievable. Optimistic steering should approach but not cross this line.';
+    return 'GT min safety score: the minimum achievable optimistic score under the true stochastic dynamics (across many GT rollouts). Optimistic steering should approach but not exceed this line — values above it are physically impossible.';
   if (metricKey === 'margin_pess')
-    return 'Empirical GT maximum margin: across 10 000 GT stochastic rollouts, the LARGEST max-over-trajectory margin actually achievable. Pessimistic steering should approach but not cross this line.';
+    return 'GT max safety score: the maximum achievable pessimistic score under the true stochastic dynamics (the most dangerous scenario possible). Pessimistic steering should approach but not go below this line — values below it are physically impossible.';
   return 'Empirical ground-truth bound from sampling many true-dynamics rollouts.';
 }
 
@@ -967,6 +989,7 @@ function fmtVal(v) {
 const valueLabelPlugin = {
   id: 'valueLabel',
   afterDatasetsDraw(chart) {
+    if (chart.config.type !== 'bar') return; // scatter/other charts use object data
     const { ctx } = chart;
     const meta = chart.getDatasetMeta(0);
     const ds = chart.data.datasets[0];
@@ -976,6 +999,7 @@ const valueLabelPlugin = {
     ctx.fillStyle = '#333';
     meta.data.forEach((bar, i) => {
       const v = ds.data[i];
+      if (typeof v !== 'number') return;
       const lbl = fmtVal(v);
       if (v >= 0) {
         ctx.textBaseline = 'bottom';
@@ -989,7 +1013,93 @@ const valueLabelPlugin = {
   }
 };
 
-Chart.register(gtLinePlugin, valueLabelPlugin);
+// ── Error-bar plugin for bar charts (draws ±95% CI lines) ────────────────────
+const errorBarPlugin = {
+  id: 'errorBar',
+  afterDatasetsDraw(chart) {
+    const ds = chart.data.datasets[0];
+    if (!ds || !ds.errHigh) return;
+    const { ctx, scales: { y } } = chart;
+    const meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+    ctx.lineWidth = 1.5;
+    meta.data.forEach((bar, i) => {
+      const hi = ds.errHigh[i], lo = ds.errLow[i];
+      if (hi == null && lo == null) return;
+      const val = ds.data[i];
+      const yTop = y.getPixelForValue(val + (hi || 0));
+      const yBot = y.getPixelForValue(val - (lo || 0));
+      const cap = 4;
+      ctx.beginPath(); ctx.moveTo(bar.x, yTop); ctx.lineTo(bar.x, yBot); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bar.x - cap, yTop); ctx.lineTo(bar.x + cap, yTop); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bar.x - cap, yBot); ctx.lineTo(bar.x + cap, yBot); ctx.stroke();
+    });
+    ctx.restore();
+  }
+};
+
+// ── Scatter: error bars on x and y ───────────────────────────────────────────
+const scatterErrorBarPlugin = {
+  id: 'scatterErrorBar',
+  afterDatasetsDraw(chart) {
+    const { ctx, scales: { x, y } } = chart;
+    chart.data.datasets.forEach((ds, di) => {
+      if (!ds.errorBars) return;
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((pt, i) => {
+        const bar = ds.errorBars[i];
+        if (!bar) return;
+        ctx.save();
+        ctx.strokeStyle = ds.borderColor || '#333';
+        ctx.lineWidth = 1.4;
+        ctx.globalAlpha = 0.75;
+        const cap = 4;
+        const xC = pt.x, yC = pt.y;
+        const dpt = ds.data[i];
+        if (bar.xLow != null || bar.xHigh != null) {
+          const xL = x.getPixelForValue(dpt.x - (bar.xLow || 0));
+          const xR = x.getPixelForValue(dpt.x + (bar.xHigh || 0));
+          ctx.beginPath(); ctx.moveTo(xL, yC); ctx.lineTo(xR, yC); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(xL, yC - cap); ctx.lineTo(xL, yC + cap); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(xR, yC - cap); ctx.lineTo(xR, yC + cap); ctx.stroke();
+        }
+        if (bar.yLow != null || bar.yHigh != null) {
+          const yT = y.getPixelForValue(dpt.y + (bar.yHigh || 0));
+          const yB = y.getPixelForValue(dpt.y - (bar.yLow || 0));
+          ctx.beginPath(); ctx.moveTo(xC, yT); ctx.lineTo(xC, yB); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(xC - cap, yT); ctx.lineTo(xC + cap, yT); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(xC - cap, yB); ctx.lineTo(xC + cap, yB); ctx.stroke();
+        }
+        ctx.restore();
+      });
+    });
+  }
+};
+
+// ── Scatter: inline text labels next to each point ───────────────────────────
+const scatterLabelPlugin = {
+  id: 'scatterLabel',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    chart.data.datasets.forEach((ds) => {
+      if (!ds.pointLabel) return;
+      const meta = chart.getDatasetMeta(chart.data.datasets.indexOf(ds));
+      if (!meta.data[0]) return;
+      const pt = meta.data[0];
+      const off = ds.labelOffset || { x: 8, y: -6 };
+      ctx.save();
+      ctx.fillStyle = ds.borderColor || '#333';
+      ctx.font = "600 9.5px 'Noto Sans', system-ui";
+      ctx.textAlign = off.x >= 0 ? 'left' : 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ds.pointLabel, pt.x + off.x, pt.y + off.y);
+      ctx.restore();
+    });
+  }
+};
+
+Chart.register(gtLinePlugin, valueLabelPlugin, errorBarPlugin, scatterErrorBarPlugin, scatterLabelPlugin);
 Chart.defaults.font.family = "'Noto Sans', system-ui, sans-serif";
 Chart.defaults.color = '#555';
 
@@ -999,6 +1109,9 @@ function buildBarConfig(subplot, { metricKey, gt = null, ylim = null, ylabel = '
   const labels = bars.map(b => b.label);
   const values = bars.map(b => b.value);
   const colors = bars.map(b => b.color);
+  const errHigh = bars.map(b => b.err_95 != null ? b.err_95 : (b.err_high != null ? b.err_high : null));
+  const errLow  = bars.map(b => b.err_95 != null ? b.err_95 : (b.err_low  != null ? b.err_low  : null));
+  const hasErrs = errHigh.some(e => e != null);
 
   const opts = {
     responsive: true, maintainAspectRatio: false,
@@ -1027,7 +1140,7 @@ function buildBarConfig(subplot, { metricKey, gt = null, ylim = null, ylabel = '
     type: 'bar',
     data: {
       labels,
-      datasets: [{
+      datasets: [Object.assign({
         data: values,
         backgroundColor: colors,
         borderColor: colors,
@@ -1035,7 +1148,7 @@ function buildBarConfig(subplot, { metricKey, gt = null, ylim = null, ylabel = '
         borderRadius: 5,
         maxBarThickness: 64,
         hoverBackgroundColor: colors.map(c => c)
-      }]
+      }, hasErrs ? { errHigh, errLow } : {})]
     },
     options: opts
   };
@@ -1096,7 +1209,7 @@ function makeTabbedChart({ tabsContainer, canvasId, headerEl, captionEl, headerF
     if (chart) { chart.destroy(); chart = null; }
     const cfg = getConfig(key);
     chart = new Chart(document.getElementById(canvasId), cfg);
-    if (headerEl && headerFmt)   headerEl.textContent = headerFmt(key);
+    if (headerEl && headerFmt)   headerEl.innerHTML = headerFmt(key);
     if (captionEl && captionMap) {
       captionEl.innerHTML = captionMap[key] || captionEl.innerHTML;
       // Re-render any KaTeX in the dynamic caption (the page's auto-render
@@ -1118,7 +1231,7 @@ function makeTabbedChart({ tabsContainer, canvasId, headerEl, captionEl, headerF
   activate(tabs[0].dataset.key);
 }
 
-const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_world_model/scripts/steering"},"palette":{"Nominal (N=1)":"#0091ff","Best-of-N (N=10)":"#0048a6","Steered (no reg)":"#0d948f","Steered (with reg)":"#ff9500","Steered (no norm)":"#9b59b6","Steered (no spectral)":"#2ecc71","Steered (no std)":"#e74c3c"},"figures":{"full_margin_mean_of_max":{"kind":"grouped_bar","title":"Margin - Max over trajectory (full)","ylabel":"Margin","agg":"mean_of_max","category":"full","metric":"margin","source":"steering_stats_{opt,noopt}_v4.json","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":-0.48969863071404396,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":-0.4913524630702659,"color":"#0048a6"},{"label":"Steered (no reg)","value":-1.6625631206100806,"color":"#0d948f"},{"label":"Steered (with reg)","value":-0.5135526636243798,"color":"#ff9500"}],"gt_line":{"value":-0.5495682219095293,"label":"GT min (-0.550)","color":"#6b6b6b","linestyle":"--"}},{"direction":"pessimistic","title":"Pessimistic","bars":[{"label":"Nominal (N=1)","value":-0.4895739876387641,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":-0.4913524630702659,"color":"#0048a6"},{"label":"Steered (no reg)","value":-0.11816152382548899,"color":"#0d948f"},{"label":"Steered (with reg)","value":-0.3835210341455415,"color":"#ff9500"}],"gt_line":{"value":-0.3691694062935817,"label":"GT max (-0.369)","color":"#d62728","linestyle":"--"}}]},"full_noise_max_spectral":{"kind":"bar","title":"Noise Metric: max_spectral (full)","ylabel":"max_spectral","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":0.4172820430248976,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.4169208424180746,"color":"#0048a6"},{"label":"Steered (no reg)","value":0.7833961850762368,"color":"#0d948f"},{"label":"Steered (with reg)","value":0.39253561320006847,"color":"#ff9500"}]}]},"full_noise_max_std_reg_sample":{"kind":"bar","title":"Noise Metric: max_std_reg_sample (full)","ylabel":"max_std_reg_sample","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":0.0028486488647198713,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.0028664806404579183,"color":"#0048a6"},{"label":"Steered (no reg)","value":0.8313630107546108,"color":"#0d948f"},{"label":"Steered (with reg)","value":0.0015403681776116514,"color":"#ff9500"}]}]},"full_noise_min_chi2_logprob":{"kind":"bar","title":"Noise Metric: min_chi2_logprob (full)","ylabel":"min_chi2_logprob","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":-7.649367388473896,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":-7.664785677908055,"color":"#0048a6"},{"label":"Steered (no reg)","value":-717.6022624735195,"color":"#0d948f"},{"label":"Steered (with reg)","value":-6.291477873085991,"color":"#ff9500"}]}]},"full_density_mean_of_mean":{"kind":"bar","title":"Density - Mean over trajectory (full)","ylabel":"Density","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":167.08559213735535,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":167.41629865127783,"color":"#0048a6"},{"label":"Steered (no reg)","value":696.6073033703353,"color":"#0d948f"},{"label":"Steered (with reg)","value":171.79677792190188,"color":"#ff9500"}]}]},"tp_fp_pessimistic":{"kind":"grouped_bar","title":"Pessimistic steering","source":"full_tp_fp_v4.json","margin_threshold":0.0,"subplots":[{"title":"True Positive Rate","ylabel":"TPR","bars":[{"label":"Nominal (N=1)","value":0.671,"color":"#0091ff"},{"label":"Steered (no reg)","value":0.9063809967396367,"color":"#0d948f"},{"label":"Steered (with reg)","value":0.888,"color":"#ff9500"}]},{"title":"False Positive Rate","ylabel":"FPR","bars":[{"label":"Nominal (N=1)","value":0.011,"color":"#0091ff"},{"label":"Steered (no reg)","value":0.2653347353662811,"color":"#0d948f"},{"label":"Steered (with reg)","value":0.072,"color":"#ff9500"}]}]},"ablation_full_density_mean_of_mean":{"kind":"bar","title":"Density - Mean over trajectory (full, ablation)","ylabel":"Density","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":167.08559213735535,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":167.41629865127783,"color":"#0048a6"},{"label":"Steered (no reg)","value":696.6073033703353,"color":"#0d948f"},{"label":"Steered (with reg)","value":171.79677792190188,"color":"#ff9500"},{"label":"Steered (no norm)","value":206.06270394452676,"color":"#9b59b6"},{"label":"Steered (no spectral)","value":187.29599805122726,"color":"#e74c3c"},{"label":"Steered (no std)","value":172.236290414684,"color":"#2ecc71"}]}]}}};
+const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_world_model/scripts/steering","notes":"Each entry in 'figures' is a ready-to-plot spec. Error bars are 1.96*std (~95% CI). GT lines from gt_worst_case_margins_eval.json."},"palette":{"Nominal (N=1)":"#0091ff","Best-of-N (N=10)":"#0048a6","Noise Optim (No Typical Set)":"#0d948f","Noise Optim":"#ff9500","Steered (no norm)":"#9b59b6","Steered (no spectral)":"#2ecc71","Steered (no std)":"#e74c3c","Classifier Guidance":"#FF2F2F"},"figures":{"full_margin_mean_of_max":{"kind":"grouped_bar","title":"Margin — Min over trajectory","ylabel":"Safety Score","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":0.48969863071404396,"err_95":0.019480050196751173,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.503075361803919,"err_95":0.01964982960452924,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":1.6625631206100806,"err_95":0.049824455179039495,"color":"#0d948f"},{"label":"Noise Optim","value":0.5135526636243798,"err_95":0.018970740245741018,"color":"#ff9500"},{"label":"Classifier Guidance","value":0.5322874604044482,"err_95":0.01974089958432228,"color":"#FF2F2F"}],"gt_line":{"value":0.5495682219095293,"label":"GT min (0.550)","color":"#6b6b6b","linestyle":"--"}},{"direction":"pessimistic","title":"Pessimistic","bars":[{"label":"Nominal (N=1)","value":0.4895739876387641,"err_95":0.01948088591702988,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.4280628053073771,"err_95":0.019220601836367555,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":0.11816152382548899,"err_95":0.017336561338795686,"color":"#0d948f"},{"label":"Noise Optim","value":0.3835210341455415,"err_95":0.015057735976543387,"color":"#ff9500"},{"label":"Classifier Guidance","value":0.443806166591309,"err_95":0.019168077985986073,"color":"#FF2F2F"}],"gt_line":{"value":0.3691694062935817,"label":"GT max (0.369)","color":"#d62728","linestyle":"--"}}]},"full_noise_max_spectral":{"kind":"bar","title":"Noise Metric: max_spectral (full)","ylabel":"max_spectral","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":0.4172820430248976,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.41672144795060156,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":0.7833961850762368,"color":"#0d948f"},{"label":"Noise Optim","value":0.39253561320006847,"color":"#ff9500"}]}]},"full_noise_max_std_reg_sample":{"kind":"bar","title":"Noise Metric: max_std_reg_sample (full)","ylabel":"max_std_reg_sample","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":0.0028486488647198713,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.0028561431368852057,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":0.8313630107546108,"color":"#0d948f"},{"label":"Noise Optim","value":0.0015403681776116514,"color":"#ff9500"}]}]},"full_noise_min_chi2_logprob":{"kind":"bar","title":"Noise Metric: min_chi2_logprob (full)","ylabel":"min_chi2_logprob","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":-7.649367388473896,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":-7.6553383119936,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":-717.6022624735195,"color":"#0d948f"},{"label":"Noise Optim","value":-6.291477873085991,"color":"#ff9500"}]}]},"full_density_mean_of_mean":{"kind":"bar","title":"Density — Mean over trajectory","ylabel":"Density","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":167.08559213735535,"err_95":0.5538561358519924,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":168.442453738764,"err_95":0.6093142834234181,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":696.6073033703353,"err_95":4.852725713688137,"color":"#0d948f"},{"label":"Noise Optim","value":171.79677792190188,"err_95":0.6015420797280394,"color":"#ff9500"},{"label":"Classifier Guidance","value":165.36807295506281,"err_95":0.5469122353507501,"color":"#FF2F2F"}]}]},"tp_fp_pessimistic":{"kind":"grouped_bar","title":"Pessimistic steering","source":"full_tp_fp_v4.json","margin_threshold":0.0,"ylim":[0,1.15],"subplots":[{"title":"True Positive Rate","ylabel":"TPR","bars":[{"label":"Nominal (N=1)","value":0.63996273870517,"err_low":0.02053783034878598,"err_high":0.020037857819884097,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.7671169073125291,"err_low":0.018346350938033607,"err_high":0.017392160437783022,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":0.9063809967396367,"err_low":0.013058096786036977,"err_high":0.01160642946002377,"color":"#0d948f"},{"label":"Noise Optim","value":0.888,"err_low":0.019990341310516024,"err_high":0.019335635186978894,"color":"#ff9500"},{"label":"Classifier Guidance","value":0.6949231485794132,"err_low":0.019810459976129846,"err_high":0.01911415880027134,"color":"#FF2F2F"}]},{"title":"False Positive Rate","ylabel":"FPR","bars":[{"label":"Nominal (N=1)","value":0.02453557658604977,"err_low":0.00506960956145391,"err_high":0.0063483252795301405,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":0.04100946372239748,"err_low":0.006681078941628282,"err_high":0.007915489728816505,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":0.2653347353662811,"err_low":0.01587781638819777,"err_high":0.016508925988825862,"color":"#0d948f"},{"label":"Noise Optim","value":0.072,"err_low":0.006372905304465073,"err_high":0.0076167426726933,"color":"#ff9500"},{"label":"Classifier Guidance","value":0.11952330879775674,"err_low":0.011395294676774609,"err_high":0.012418550048666765,"color":"#FF2F2F"}]}]},"ablation_full_density_mean_of_mean":{"kind":"bar","title":"Density — Mean over trajectory (ablation)","ylabel":"Density","subplots":[{"direction":"optimistic","title":"Optimistic","bars":[{"label":"Nominal (N=1)","value":167.08559213735535,"err_95":0.5538561358519924,"color":"#0091ff"},{"label":"Best-of-N (N=10)","value":167.41629865127783,"err_95":0.4696534919256582,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","value":696.6073033703353,"err_95":4.852725713688137,"color":"#0d948f"},{"label":"Noise Optim","value":171.79677792190188,"err_95":0.6015420797280394,"color":"#ff9500"},{"label":"Steered (no norm)","value":206.06270394452676,"err_95":0.7482320724263398,"color":"#9b59b6"},{"label":"Steered (no spectral)","value":172.236290414684,"err_95":0.5803398701672956,"color":"#2ecc71"},{"label":"Steered (no std)","value":187.29599805122726,"err_95":1.0113100552926455,"color":"#e74c3c"}]}]},"tpr_vs_tnr_pessimistic":{"kind":"scatter","title":"TPR vs TNR","xlabel":"True Positive Rate (Failure Detection)","ylabel":"True Negative Rate","xlim":[0.55,1.0],"ylim":[0.68,1.0],"points":[{"label":"Nominal (N=1)","x":0.63996273870517,"y":0.9754644234139502,"x_err_low":0.02053783034878598,"x_err_high":0.020037857819884097,"y_err_low":0.0063483252795301405,"y_err_high":0.00506960956145391,"color":"#0091ff"},{"label":"Best-of-N (N=10)","x":0.7671169073125291,"y":0.9589905362776026,"x_err_low":0.018346350938033607,"x_err_high":0.017392160437783022,"y_err_low":0.007915489728816505,"y_err_high":0.006681078941628282,"color":"#0048a6"},{"label":"Noise Optim (No Typical Set)","x":0.9063809967396367,"y":0.7346652646337188,"x_err_low":0.013058096786036977,"x_err_high":0.01160642946002377,"y_err_low":0.016508925988825862,"y_err_high":0.01587781638819777,"color":"#0d948f"},{"label":"Noise Optim","x":0.888,"y":0.928,"x_err_low":0.019990341310516024,"x_err_high":0.019335635186978894,"y_err_low":0.0076167426726933,"y_err_high":0.006372905304465073,"color":"#ff9500"},{"label":"Classifier Guidance","x":0.6949231485794132,"y":0.8804766912022433,"x_err_low":0.019810459976129846,"x_err_high":0.01911415880027134,"y_err_low":0.012418550048666765,"y_err_high":0.0067409427786658885,"color":"#FF2F2F"}]}}};
 
 ;(function () {
   const F = RESULTS_JSON.figures;
@@ -1129,23 +1242,14 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
   const tprSub  = tpfp.find(s => /True Positive/i.test(s.title));
   const fprSub  = tpfp.find(s => /False Positive/i.test(s.title));
 
-  // ── Steering panel ────────────────────────────────────────────────────────
-  makeTabbedChart({
-    tabsContainer: document.querySelector('[data-tabs-for="steering"]'),
-    canvasId: 'c_steering',
-    headerEl: document.getElementById('steering-header'),
-    headerFmt: (k) => k === 'opt'
-      ? 'Optimistic steering — Margin (mean across 5000 trajectories)'
-      : 'Pessimistic steering — Margin (mean across 5000 trajectories)',
-    getConfig: (k) => {
-      const sub = k === 'opt' ? optSub : pessSub;
-      return buildBarConfig(sub, {
-        metricKey: k === 'opt' ? 'margin_opt' : 'margin_pess',
-        gt: sub.gt_line,
-        ylabel: 'Margin'
-      });
-    }
-  });
+  // ── Steering panel (pessimistic only) ────────────────────────────────────
+  new Chart(document.getElementById('c_steering'),
+    buildBarConfig(pessSub, {
+      metricKey: 'margin_pess',
+      gt: pessSub.gt_line,
+      ylabel: 'Safety Score'
+    })
+  );
 
   // ── Regularizer panel ─────────────────────────────────────────────────────
   const regCaptionMap = {
@@ -1158,7 +1262,7 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
     spectral: 'Spectral density — full (5000 samples)',
     std:      'Isotropy — full (5000 samples)',
     chi2:     'Norm — full (5000 samples)',
-    density:  'Latent density (flow matching) — full (5000 samples)'
+    density:  'OOD Score (via <a href="https://github.com/CXU-TRI/FAIL-Detect" target="_blank" rel="noopener">FAIL-Detect</a> Flow-based Density Estimation) — full (5000 samples)'
   };
   const regSubs = {
     spectral: F.full_noise_max_spectral.subplots[0],
@@ -1187,26 +1291,86 @@ const RESULTS_JSON = {"meta":{"generated_from":"/home/junwon/robust/diffusion_wo
     })
   });
 
-  // ── Failure-detection panel ───────────────────────────────────────────────
-  makeTabbedChart({
-    tabsContainer: document.querySelector('[data-tabs-for="failure"]'),
-    canvasId: 'c_failure',
-    headerEl: document.getElementById('failure-header'),
-    headerFmt: (k) => k === 'tpr'
-      ? 'Pessimistic steering — True Positive Rate'
-      : 'Pessimistic steering — False Positive Rate',
-    getConfig: (k) => buildBarConfig(k === 'tpr' ? tprSub : fprSub, {
-      metricKey: k,
-      ylim: [0, 1.0],
-      ylabel: k === 'tpr' ? 'TPR' : 'FPR'
-    })
-  });
+  // ── TPR vs TNR scatter ────────────────────────────────────────────────────
+  (function () {
+    const fig = F.tpr_vs_tnr_pessimistic;
+    const labelOffsets = {
+      'Nominal (N=1)':      { x: -8, y: -11 },
+      'Best-of-N (N=10)':   { x: 8,  y: -11 },
+      'Noise Optim (No Typical Set)':   { x: 8,  y: 8   },
+      'Noise Optim': { x: 8,  y: -11 },
+      'Classifier Guidance':{ x: 8,  y: 8   }
+    };
+    const datasets = fig.points.map(pt => ({
+      label: pt.label,
+      data: [{ x: pt.x, y: pt.y }],
+      backgroundColor: pt.color,
+      borderColor: pt.color,
+      pointRadius: 7,
+      pointHoverRadius: 9,
+      pointStyle: 'circle',
+      pointLabel: pt.label,
+      labelOffset: labelOffsets[pt.label] || { x: 8, y: -8 },
+      errorBars: [{
+        xLow: pt.x_err_low, xHigh: pt.x_err_high,
+        yLow: pt.y_err_low, yHigh: pt.y_err_high
+      }]
+    }));
+    const scatterHover = (evt, activeEls, chart) => {
+      if (!evt) { hideTip(); return; }
+      if (activeEls && activeEls.length) {
+        const di = activeEls[0].datasetIndex;
+        const ds = chart.data.datasets[di];
+        const pt = ds.data[0];
+        const rect = chart.canvas.getBoundingClientRect();
+        const ex = (evt.x != null) ? evt.x : (evt.native ? evt.native.offsetX : 0);
+        const ey = (evt.y != null) ? evt.y : (evt.native ? evt.native.offsetY : 0);
+        const tnr = (pt.y * 100).toFixed(1), tpr = (pt.x * 100).toFixed(1);
+        showTip(
+          `<div class="tip-title"><span class="tip-swatch" style="background:${ds.borderColor}"></span>${ds.label}</div>
+           <div class="tip-value">TPR: ${tpr}% &nbsp;|&nbsp; TNR: ${tnr}%</div>
+           <div class="tip-help">${labelHelp[ds.label] || ''}</div>`,
+          rect.left + ex, rect.top + ey
+        );
+        chart.canvas.style.cursor = 'pointer';
+        return;
+      }
+      hideTip();
+      chart.canvas.style.cursor = 'default';
+    };
+    new Chart(document.getElementById('c_tpr_tnr'), {
+      type: 'scatter',
+      data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 350 },
+        plugins: {
+          legend: { display: true, position: 'top',
+            labels: { boxWidth: 10, padding: 10, font: { size: 10 } } },
+          tooltip: { enabled: false }
+        },
+        onHover: scatterHover,
+        scales: {
+          x: {
+            title: { display: true, text: fig.xlabel, font: { size: 11, weight: '600' } },
+            min: fig.xlim[0], max: fig.xlim[1],
+            grid: { color: '#eee' }
+          },
+          y: {
+            title: { display: true, text: fig.ylabel, font: { size: 11, weight: '600' } },
+            min: fig.ylim[0], max: fig.ylim[1],
+            grid: { color: '#eee' }
+          }
+        }
+      }
+    });
+  })();
 
   // ── Ablation panel (single chart, no tabs but uses the same hover system) ─
   (function () {
     const sub = F.ablation_full_density_mean_of_mean.subplots[0];
     new Chart(document.getElementById('c_ablation'),
-      buildBarConfig(sub, { metricKey: 'ablation', ylabel: 'Density' }));
+      buildBarConfig(sub, { metricKey: 'ablation', ylabel: 'OOD Score (via Flow-based Density Estimation)' }));
   })();
 
   // Hide tooltip when the cursor leaves any chart

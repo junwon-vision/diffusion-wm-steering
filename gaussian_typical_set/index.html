@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Typical Set of a High-Dimensional Gaussian Distribution</title>
+<link rel="icon" href="../gaussian-function.png" type="image/png">
+<link rel="apple-touch-icon" href="../gaussian-function.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+:root {
+  --safe: #2e7d32;
+  --safe-light: #e8f5e9;
+  --fail: #c62828;
+  --fail-light: #ffebee;
+  --accent: #1565c0;
+  --accent-light: #e3f2fd;
+  --text: #222;
+  --text-sec: #555;
+  --text-dim: #888;
+  --bg: #fff;
+  --bg-alt: #f7f8fa;
+  --border: #e0e0e0;
+  --max-w: 960px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; font-family: 'Noto Sans', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  font-size: 15px; line-height: 1.6;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+.nav-inner {
+  max-width: var(--max-w); margin: 0 auto;
+  height: 52px;
+  display: flex; align-items: center;
+  gap: 0; overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+}
+.nav-inner::-webkit-scrollbar { display: none; }
+.nav-back {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--text-sec); font-size: 0.85rem; font-weight: 600;
+  text-decoration: none; white-space: nowrap;
+  padding: 14px 0; margin-right: 20px;
+  border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-back:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.nav-sep { color: var(--border); font-size: 1.1rem; margin: 0 4px; flex-shrink: 0; }
+nav a.nav-sec {
+  color: var(--text-sec); text-decoration: none;
+  font-size: 0.85rem; font-weight: 600;
+  white-space: nowrap; padding: 14px 16px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+nav a.nav-sec:hover, nav a.nav-sec.active {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
+
+/* ── Content wrapper ── */
+#content { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+
+/* ── Sections ── */
+.section { padding: 48px 0 24px; }
+.section + .section { border-top: 1px solid var(--border); }
+.section-title {
+  font-size: 1.5rem; font-weight: 700; margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+.section-tagline {
+  font-weight: 600;
+  color: #0D948F;
+}
+.section-subtitle {
+  font-size: 0.92rem; color: var(--text-sec); margin: 0 0 28px;
+}
+.section-subtitle a {
+  color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.section-subtitle a:hover { border-bottom-color: var(--accent); }
+
+/* ── Prose ── */
+.prose { font-size: 0.94rem; color: var(--text-sec); line-height: 1.75; }
+.prose p { margin: 0 0 1rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { color: var(--text); }
+.prose em { font-style: italic; }
+
+/* ── Panel ── */
+.panel {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  margin-bottom: 28px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.panel-header {
+  padding: 14px 20px; font-weight: 700; font-size: 1.05rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-alt);
+}
+.panel-header .badge {
+  font-size: 0.7rem; font-weight: 600; padding: 2px 10px;
+  border-radius: 100px; background: var(--accent-light); color: var(--accent);
+}
+.panel-body { padding: 20px 20px 16px; }
+
+/* ── Task-sel style chips for dimension presets ── */
+.task-sel-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.task-sel-btn {
+  padding: 8px 20px; border-radius: 100px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-sec); font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; transition: all 0.18s; font-family: inherit;
+}
+.task-sel-btn:hover { border-color: var(--accent); color: var(--accent); }
+.task-sel-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── Slider controls ── */
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; margin-bottom: 18px; }
+.ctrl-group { display: flex; align-items: center; gap: 10px; }
+.ctrl-label { font-size: 0.85rem; color: var(--text-sec); }
+.ctrl-val { font-size: 0.9rem; font-weight: 600; min-width: 60px; color: var(--text); }
+input[type=range] { accent-color: var(--accent); cursor: pointer; }
+
+/* ── Stat cards ── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 20px 0; }
+.stat-card {
+  background: var(--bg-alt); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+}
+.stat-card-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+.stat-card-val { font-size: 1.4rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+.stat-card-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 3px; }
+
+/* ── Chart ── */
+.chart-wrap {
+  position: relative;
+  width: 500px;
+  height: 500px;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+@media (max-width: 560px) { .chart-wrap { width: 100%; height: auto; aspect-ratio: 1; } }
+
+/* ── Annotation ── */
+.annotation { font-size: 0.84rem; color: var(--text-dim); margin-top: 10px; line-height: 1.6; }
+
+/* ── Hero button (back link + similar links) ── */
+.hero-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 6px;
+  font-size: 0.85rem; font-weight: 600;
+  text-decoration: none; white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1.5px solid var(--border);
+  color: var(--text-sec); background: var(--bg);
+  font-family: inherit;
+}
+.hero-btn:hover { background: var(--bg-alt); border-color: #bbb; color: var(--text); }
+
+/* ── Theory panels ── */
+.theory-intro { font-size: 0.94rem; color: var(--text-sec); line-height: 1.75; margin-bottom: 24px; }
+.theory-intro p { margin: 0 0 0.8rem; }
+
+/* ── Figure ── */
+.fig-wrap { margin-top: 20px; }
+.fig-wrap img { width: 100%; border-radius: 8px; display: block; }
+.fig-caption { font-size: 0.8rem; color: var(--text-dim); margin-top: 10px; line-height: 1.6; }
+
+/* ── Footer ── */
+footer {
+  text-align: center; padding: 40px 24px;
+  color: var(--text-dim); font-size: 0.82rem;
+  border-top: 1px solid var(--border); margin-top: 24px;
+}
+footer a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+footer a:hover { border-bottom-color: var(--accent); }
+
+@media (max-width: 640px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  #content { padding: 0 16px; }
+  .section-title { font-size: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-back" href="../index.html">&#8592; Back</a>
+    <span class="nav-sep">|</span>
+    <a href="#intro" class="nav-sec active">Intuition</a>
+    <a href="#demo" class="nav-sec">Interactive Demo</a>
+    <a href="#math" class="nav-sec">Math</a>
+    <a href="#constraints" class="nav-sec">Typicality Constraints for High-Dimensional Gaussian</a>
+  </div>
+</nav>
+
+<div id="content">
+
+  <!-- ══ Section A: Intuitive Introduction (no equations) ══ -->
+  <div class="section" id="intro">
+    <h1 class="section-title">The Typical Set of a High-Dimensional Gaussian Distribution</h1>
+    <p class="section-subtitle"><span class="section-tagline">Never look down on Gaussian distribution, especially when it is getting high-dimensional</span> — where the samples actually live will surprise you.</p>
+
+    <div class="prose">
+      <p>
+        Under a standard Gaussian distribution, the point with the
+        <em>highest probability density</em> is the zero vector <strong>0</strong>.
+        But in high dimensions, a random sample is almost never close to <strong>0</strong>.
+        This may seem contradictory: how can the point with the largest density be so unrepresentative
+        of actual samples?
+      </p>
+      
+      <p>
+        The key is that probability mass depends on both density and volume.
+        Mass is density times volume, and in high dimensions the region near the origin has
+        extremely small volume. As we move outward, concentric spherical shells have much larger
+        surface area, growing roughly as r<sup>d&minus;1</sup>. Thus, although the Gaussian density
+        decreases with radius, the available volume increases rapidly enough that most samples
+        occur away from the origin.
+      </p>
+      
+      <p>
+        For a d-dimensional standard Gaussian, the norm of a typical sample is concentrated
+        near &radic;d. In other words, most probability mass lies in a thin shell at this radius:
+        not near the center, and not far out in the tails. This radial concentration is one way
+        to describe typicality in high-dimensional Gaussians. More generally, typical samples are
+        characterized not by having the highest density at a single point, but by satisfying the
+        aggregate statistics expected under the distribution.
+      </p>
+      <p>
+        <strong>Why does this matter for diffusion models?</strong>
+        Diffusion models are trained to denoise Gaussian noise that was drawn from this typical set.
+        If gradient-based optimization pushes the initial noise toward the high-density interior
+        (e.g., near <strong>0</strong>) or far outside the shell, the denoiser sees inputs it almost
+        never encountered during training.
+        This leads to approximation errors and, ultimately, implausible or out-of-distribution generations.
+        Keeping the noise inside the typical set is therefore a principled constraint, not a heuristic.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ Section B: Interactive Demo ══ -->
+  <div class="section" id="demo">
+    <h2 class="section-title">See it for yourself</h2>
+    <p class="section-subtitle">
+      Each point below is a sample from a d-dimensional Gaussian, plotted at its true Euclidean norm
+      as the distance from the origin (with a random angle). Watch the ring tighten around &radic;d as
+      you increase the dimension.
+    </p>
+
+    <!-- Preset chips -->
+    <div class="task-sel-row" id="presets">
+      <button class="task-sel-btn active" data-d="2">d = 2</button>
+      <button class="task-sel-btn" data-d="10">d = 10</button>
+      <button class="task-sel-btn" data-d="100">d = 100</button>
+      <button class="task-sel-btn" data-d="100000">d = 100 000</button>
+    </div>
+
+    <!-- Sliders -->
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Dimension d =</span>
+        <input type="range" id="dimSlider" min="1" max="10000" value="2" step="1" style="width:160px">
+        <span class="ctrl-val" id="dimVal">2</span>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Samples</span>
+        <input type="range" id="nSlider" min="50" max="500" value="300" step="25" style="width:120px">
+        <span class="ctrl-val" id="nVal">300</span>
+      </div>
+    </div>
+
+    <!-- Chart panel -->
+    <div class="panel">
+      <div class="panel-header">
+        Gaussian Samples Projected by Norm
+        <span class="badge" id="dBadge">d = 2</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-wrap">
+          <canvas id="shellChart" role="img" aria-label="2D scatter of Gaussian samples placed at their Euclidean norm from origin"></canvas>
+          <canvas id="pickOverlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
+        </div>
+        <div class="annotation" id="annotation"></div>
+        <div id="pickResult" style="margin-top:14px;padding:14px 18px;background:var(--bg-alt);border-radius:8px;border:1px solid var(--border);font-size:0.88rem;color:var(--text-sec);line-height:1.9;">
+          <span style="color:var(--text-dim);">Move cursor over the chart to probe a noise vector.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Expected ‖x‖</div>
+        <div class="stat-card-val" id="statExpected">—</div>
+        <div class="stat-card-sub">= &radic;d (exact)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Mean ‖x‖ (samples)</div>
+        <div class="stat-card-val" id="statMean">—</div>
+        <div class="stat-card-sub">from samples</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Std of ‖x‖²</div>
+        <div class="stat-card-val" id="statStd">—</div>
+        <div class="stat-card-sub">= &radic;(2d) (exact)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">CoV of ‖x‖²</div>
+        <div class="stat-card-val" id="statRel">—</div>
+        <div class="stat-card-sub">&radic;(2/d) &rarr; 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Section C: Theory ══ -->
+  <div class="section" id="math">
+    <h2 class="section-title">Why Samples Concentrate on a Shell: the Math</h2>
+    <p class="section-subtitle">Formal results that quantify how tightly Gaussian samples cluster around radius &radic;d.</p>
+
+    <div class="theory-intro">
+      <p>
+        Let \(\mathbf{x} \sim \mathcal{N}(\mathbf{0}, I_d)\) be a \(d\)-dimensional Gaussian random vector with coordinates \(x_1, \ldots, x_d\)
+        drawn i.i.d. from \(\mathcal{N}(0,1)\). Then the squared norm is a sum of independent squares:
+        \(\|\mathbf{x}\|_2^2 = \sum_{j=1}^d x_j^2 \sim \chi^2_d\),
+        which has mean \(d\) and variance \(2d\). The coefficient of variation
+        \(\operatorname{std}(\|\mathbf{x}\|_2^2)/\mathbb{E}[\|\mathbf{x}\|_2^2] = \sqrt{2/d} \to 0\)
+        — the squared norm concentrates tightly around \(d\), so the norm concentrates around \(\sqrt{d}\).
+      </p>
+      <p>
+        The results below make this precise and derive the practical regularizer used in our noise optimization.
+      </p>
+    </div>
+
+    <!-- Lemma -->
+    <div class="panel">
+      <div class="panel-header">Lemma &mdash; Norm Concentration of Gaussian Noise</div>
+      <div class="panel-body">
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 12px;">
+          Let \(\boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, I_d)\).
+          Then for any \(\delta \in (0,1)\),
+        </p>
+        <div style="text-align:center;margin:10px 0 14px;">
+          \[\mathbb{P}\!\left(\left|\frac{\|\boldsymbol{\varepsilon}\|_2^2}{d} - 1\right|
+          > 2\sqrt{\frac{\log(2/\delta)}{d}} + 2\frac{\log(2/\delta)}{d}\right) \le \delta.\]
+        </div>
+        <p style="font-size:0.88rem;color:var(--text-sec);margin:0;">
+          <strong>Proof sketch.</strong>
+          Write \(\|\boldsymbol{\varepsilon}\|_2^2 = \sum_{j=1}^d \varepsilon_j^2 \sim \chi^2_d\).
+          Apply the Laurent&ndash;Massart inequality to get upper and lower tail bounds each at level
+          \(x = \log(2/\delta)\); a union bound gives the two-sided result.
+          Dividing by \(d\) yields the relative deviation stated above. \(\square\)
+        </p>
+      </div>
+    </div>
+
+    <!-- Corollary 1 -->
+    <div class="panel">
+      <div class="panel-header">Corollary &mdash; Scale of the Norm Regularizer</div>
+      <div class="panel-body">
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 10px;">
+          Define the norm regularizer \(\mathcal{C}_{\mathrm{norm}}(\boldsymbol{\varepsilon})
+          := \bigl(\|\boldsymbol{\varepsilon}\|_2 - \sqrt{d}\bigr)^2\).
+          Then with probability at least \(1-\delta\),
+        </p>
+        <div style="text-align:center;margin:10px 0 14px;">
+          \[\mathcal{C}_{\mathrm{norm}}(\boldsymbol{\varepsilon})
+          \le \Bigl(2\sqrt{\log(2/\delta)} + 2\tfrac{\log(2/\delta)}{\sqrt{d}}\Bigr)^2
+          = O\!\Bigl(\log\tfrac{1}{\delta} + \tfrac{\log^2(1/\delta)}{d}\Bigr).\]
+        </div>
+        <p style="font-size:0.88rem;color:var(--text-sec);margin:0;">
+          The penalty a <em>typical</em> sample incurs is \(O(\log(1/\delta))\), independent of \(d\) at leading order.
+          This justifies using \(\mathcal{C}_{\mathrm{norm}}\) as a regularizer: it is small for in-distribution noise
+          and large for atypical noise.
+        </p>
+      </div>
+    </div>
+
+    <!-- Corollary 2 -->
+    <div class="panel">
+      <div class="panel-header">Corollary &mdash; Dimension-Independent Shell Width</div>
+      <div class="panel-body">
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 10px;">
+          Let \(R = \|\boldsymbol{\varepsilon}\|_2\). Then
+        </p>
+        <div style="text-align:center;margin:10px 0 14px;">
+          \[\operatorname{std}(R) \;\longrightarrow\; \frac{1}{\sqrt{2}} \qquad \text{as } d \to \infty.\]
+        </div>
+        <p style="font-size:0.88rem;color:var(--text-sec);margin:0;">
+          Although the typical radius grows as \(\sqrt{d}\), the <em>absolute</em> width of the shell
+          containing most probability mass stays bounded — converging to \(1/\sqrt{2}\) &asymp; 0.71.
+          The shell becomes relatively thinner with dimension even as it expands.
+          This is why the interactive demo shows an ever-tighter ring for larger \(d\).
+          <br><br>
+          <strong>Proof sketch.</strong>
+          \(R\) follows a chi distribution with \(d\) degrees of freedom, with
+          \(\operatorname{Var}(R) = d - 2\bigl(\Gamma((d+1)/2)/\Gamma(d/2)\bigr)^2 \to 1/2\)
+          by Stirling's approximation. \(\square\)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Section D: Norm is not enough ══ -->
+  <div class="section" id="constraints">
+    <h2 class="section-title">Norm Alone is Not Sufficient for Typicality</h2>
+    <p class="section-subtitle">
+      Gradient-based optimization can push noise off the typical set in multiple ways —
+      norm, isotropy, and spectral whiteness must all be maintained simultaneously.
+    </p>
+
+    <div class="prose" style="margin-bottom:20px;">
+      <p>
+        Diffusion models are trained to generate samples from noise drawn from the Gaussian prior.
+        When the noise leaves the typical set — where most training-time samples lie — the resulting
+        out-of-distribution noise can produce implausible outputs that are unlikely under the model's
+        learned distribution. Since gradient-based noise optimization can perturb noise away from
+        the typical set, inducing atypical coordinate patterns or structured spectral artifacts,
+        we employ a <em>distributional objective</em> \(\mathcal{C}(\boldsymbol{\varepsilon})\)
+        that combines three statistics of high-dimensional Gaussian noise:
+      </p>
+    </div>
+
+    <div style="text-align:center;margin:0 0 24px;">
+      \[\mathcal{C}(\boldsymbol{\varepsilon})
+      = \lambda_1\,\mathcal{C}_{\mathrm{norm}}(\boldsymbol{\varepsilon})
+      + \lambda_2\,\mathcal{C}_{\mathrm{iso}}(\boldsymbol{\varepsilon})
+      + \lambda_3\,\mathcal{C}_{\mathrm{spec}}(\boldsymbol{\varepsilon}).\]
+    </div>
+
+    <!-- Density vs mass figure -->
+    <div class="panel" style="margin-bottom:28px;">
+      <div class="panel-header">Probability Density vs. Probability Mass in High-Dimensional Gaussians</div>
+      <div class="panel-body">
+        <div class="fig-wrap">
+          <img src="../figures/appendix-high-dim.jpg"
+               alt="Probability density is highest at the origin, but probability mass concentrates on a thin shell. Noise sampled from the typical set leads to plausible video generations; noise outside it leads to implausible ones.">
+          <p class="fig-caption">
+            <strong>Probability density vs.&nbsp;probability mass in a high-dimensional Gaussian distribution.</strong>
+            Noise sampled from the typical set leads to plausible generations, whereas noise outside the
+            typical set — despite possibly having high probability density — can produce implausible
+            generations, e.g., humans becoming blurry or transforming into vehicles.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Norm concentration -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header">Norm Concentration <span class="badge">\(\mathcal{C}_{\mathrm{norm}}\)</span></div>
+      <div class="panel-body">
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 10px;">
+          For Gaussian noise \(\boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, I_d)\), the squared norm satisfies
+          \(\|\boldsymbol{\varepsilon}\|_2^2 \sim \chi^2_d\) and therefore concentrates sharply around \(d\).
+          Equivalently, the radius \(R = \|\boldsymbol{\varepsilon}\|_2\) follows a chi distribution with \(d\)
+          degrees of freedom, whose standard deviation remains bounded independently of \(d\) and
+          approaches \(1/\sqrt{2}\) as \(d \to \infty\). Thus, although the typical radius grows as \(\sqrt{d}\),
+          the absolute width of the shell containing most probability mass remains approximately constant.
+          This motivates penalising deviations of the squared norm from its typical value:
+        </p>
+        <div style="text-align:center;margin:8px 0;">
+          \[\mathcal{C}_{\mathrm{norm}}(\boldsymbol{\varepsilon})
+          := \bigl(\|\boldsymbol{\varepsilon}\|_2^2 - d\bigr)^2.\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Isotropy -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header">Isotropy <span class="badge">\(\mathcal{C}_{\mathrm{iso}}\)</span></div>
+      <div class="panel-body">
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 10px;">
+          While norm concentration enforces typicality at a <em>global</em> scale, the optimized noise
+          may still contain local correlations or structured coordinate patterns that are unlikely under
+          an i.i.d. Gaussian prior. To encourage coordinate-wise independence, the entries of
+          \(\boldsymbol{\varepsilon}\) are randomly permuted and partitioned into \(m\) subvectors
+          \(\{\boldsymbol{\varepsilon}_i\}_{i=1}^m \subset \mathbb{R}^k\), where \(d = mk\).
+          Under the Gaussian prior, these subvectors behave as i.i.d. samples from
+          \(\mathcal{N}(\mathbf{0}, I_k)\), so their empirical second moment
+        </p>
+        <div style="text-align:center;margin:8px 0;">
+          \[\widehat{\boldsymbol{\Sigma}} = \frac{1}{m}\sum_{i=1}^m \boldsymbol{\varepsilon}_i\boldsymbol{\varepsilon}_i^\top\]
+        </div>
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 10px;">
+          should be close to \(I_k\). We penalise blockwise deviations from isotropy:
+        </p>
+        <div style="text-align:center;margin:8px 0;">
+          \[\mathcal{C}_{\mathrm{iso}}(\boldsymbol{\varepsilon})
+          := \frac{1}{k}\bigl\|\widehat{\boldsymbol{\Sigma}} - I_k\bigr\|_F^2,\]
+        </div>
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0;">
+          averaged over multiple random permutations.
+        </p>
+      </div>
+    </div>
+
+    <!-- Spectral whiteness -->
+    <div class="panel" style="margin-bottom:28px;">
+      <div class="panel-header">Spectral Whiteness <span class="badge">\(\mathcal{C}_{\mathrm{spec}}\)</span></div>
+      <div class="panel-body">
+        <p style="font-size:0.91rem;color:var(--text-sec);margin:0 0 10px;">
+          Even when noise remains typical in coordinate space, gradient-based optimization can introduce
+          structured frequency-domain artifacts. Since standard Gaussian noise has a flat expected power
+          spectrum, we encourage the optimized noise to remain spectrally white. Let \(\mathcal{F}\) denote
+          a unitary discrete Fourier transform and compute the power spectrum
+          \(\mathbf{P} = |\mathcal{F}(\boldsymbol{\varepsilon})|^2\).
+          Aggregating \(\mathbf{P}\) into \(B\) frequency bins gives bin-averaged powers
+          \(\{\hat{p}_b\}_{b=1}^B\). We minimise their variance:
+        </p>
+        <div style="text-align:center;margin:8px 0;">
+          \[\mathcal{C}_{\mathrm{spec}}(\boldsymbol{\varepsilon})
+          := \frac{1}{B}\sum_{b=1}^B \bigl(\hat{p}_b - \bar{p}\bigr)^2,
+          \qquad \bar{p} = \frac{1}{B}\sum_{b'=1}^B \hat{p}_{b'}.\]
+        </div>
+      </div>
+    </div>
+
+    <!-- typical.png: violations figure -->
+    <div class="panel">
+      <div class="panel-header">Examples of Atypical Gaussian Noise</div>
+      <div class="panel-body">
+        <div class="fig-wrap">
+          <img src="../figures/typical.png"
+               alt="Left: typical Gaussian noise. Others: noise perturbed to violate norm concentration, isotropy, and spectral whiteness respectively.">
+          <p class="fig-caption">
+            <strong>Examples of atypical Gaussian noise.</strong>
+            <em>Left:</em> typical noise sampled from the Gaussian prior.
+            <em>Others:</em> noises perturbed to violate norm concentration, isotropy, and spectral whiteness, respectively.
+            Violating norm concentration produces noise with globally biased values;
+            violating isotropy introduces local coordinate patterns;
+            violating spectral whiteness produces structured, non-white patterns in the frequency domain.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#content -->
+
+<footer>
+  <a href="../index.html">&#8592; StressDream</a>
+</footer>
+
+<script>
+// ── RNG: Box-Muller ──────────────────────────────────────────────────────────
+function randn() {
+  let u = 0, v = 0;
+  while (!u) u = Math.random();
+  while (!v) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// ── Sample norms for n d-dimensional Gaussians ───────────────────────────────
+function sampleNorms(d, n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    let r2 = 0;
+    for (let j = 0; j < d; j++) { const x = randn(); r2 += x * x; }
+    out.push(Math.sqrt(r2));
+  }
+  return out;
+}
+
+// ── Color: blue (typical) → red (atypical) ───────────────────────────────────
+function normColor(r, sqrtD, band) {
+  const t = Math.min(Math.abs(r - sqrtD) / Math.max(band, 0.5), 1);
+  // typical (t=0): #FF9500  →  OOD (t=1): #0048A6
+  const R = Math.round(255 + t * (0   - 255));
+  const G = Math.round(149 + t * (72  - 149));
+  const B = Math.round(0   + t * (166 - 0  ));
+  return `rgba(${R},${G},${B},0.7)`;
+}
+
+// ── Custom Chart.js plugin: shell circle + origin marker ─────────────────────
+const shellPlugin = {
+  id: 'shellOverlay',
+  afterDraw(chart) {
+    const sqrtD = chart._sqrtD;
+    if (sqrtD == null) return;
+    const { ctx, scales } = chart;
+    const xS = scales.x, yS = scales.y;
+    const cx = xS.getPixelForValue(0);
+    const cy = yS.getPixelForValue(0);
+    const px = Math.abs(xS.getPixelForValue(sqrtD) - cx);
+
+    // Dashed shell circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, px, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#2e7d32';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Shell label
+    ctx.fillStyle = '#2e7d32';
+    ctx.font = 'bold 11px "Noto Sans", sans-serif';
+    const label = 'shell r ≈ √' + 'd = ' + sqrtD.toFixed(1);
+    ctx.fillText(label, cx + px + 6, cy - 6);
+
+    // Origin dot (red = fail color)
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = '#c62828';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Origin label
+    ctx.fillStyle = '#c62828';
+    ctx.font = '10px "Noto Sans", sans-serif';
+    ctx.fillText('0 (max density,', cx + 11, cy - 3);
+    ctx.fillText('never sampled in high-dim.)', cx + 11, cy + 11);
+
+    ctx.restore();
+  }
+};
+Chart.register(shellPlugin);
+
+// ── State ────────────────────────────────────────────────────────────────────
+let chart = null;
+let currentD = 2; // may exceed slider max for large presets
+let lastPick = { x: 0, y: 0 }; // default at origin
+
+const gridColor  = 'rgba(0,0,0,0.06)';
+const axisColor  = '#888';
+
+// ── Chi-squared CDF via regularized incomplete gamma ─────────────────────────
+function logGamma(z) {
+  // Lanczos approximation
+  const p = [0.99999999999980993,676.5203681218851,-1259.1392167224028,
+             771.32342877765313,-176.61502916214059,12.507343278686905,
+             -0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+  z -= 1;
+  let x = p[0];
+  for (let i = 1; i < 9; i++) x += p[i] / (z + i);
+  const t = z + 7.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+function gammaSeries(a, x) { // lower regularized P(a,x)
+  let ap = a, del = 1 / a, sum = del;
+  for (let n = 1; n <= 300; n++) {
+    ap++; del *= x / ap; sum += del;
+    if (Math.abs(del) < Math.abs(sum) * 1e-13) break;
+  }
+  return sum * Math.exp(-x + a * Math.log(x) - logGamma(a));
+}
+function gammaCF(a, x) { // upper regularized Q(a,x) via Lentz CF
+  let b = x + 1 - a, c = 1e30, d = 1 / b, h = d;
+  for (let i = 1; i <= 300; i++) {
+    const an = -i * (i - a); b += 2;
+    d = an * d + b; if (Math.abs(d) < 1e-30) d = 1e-30; d = 1 / d;
+    c = b + an / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+    const delta = d * c; h *= delta;
+    if (Math.abs(delta - 1) < 1e-13) break;
+  }
+  return Math.exp(-x + a * Math.log(x) - logGamma(a)) * h;
+}
+function chi2CDF(x, k) {
+  if (x <= 0) return 0;
+  const a = k / 2, t = x / 2;
+  return t < a + 1 ? gammaSeries(a, t) : 1 - gammaCF(a, t);
+}
+
+// ── Typicality: two-tailed p-value = 2·min(CDF, 1−CDF) ──────────────────────
+// = 0 at center, peaks ~100% at median radius ≈ √d, falls to 0 far out
+function normTailProb(r, d) {
+  const cdf = chi2CDF(r * r, d);
+  return 2 * Math.min(cdf, 1 - cdf);
+}
+
+// ── Format probability as a × 10^b % ─────────────────────────────────────────
+function fmtSci(p) {
+  if (p <= 0) return '0 &times; 10<sup>0</sup>%';
+  const pct = p * 100;
+  if (!isFinite(pct)) return '&gt; 99.99%';
+  const b = Math.floor(Math.log10(pct));
+  const a = pct / Math.pow(10, b);
+  // Show plain percentage for large probabilities
+  if (b >= 0) return pct.toFixed(2) + '%';
+  return `${a.toFixed(2)} &times; 10<sup>${b}</sup>%`;
+}
+
+// ── Sync overlay canvas pixel dimensions to match main chart canvas ───────────
+function syncOverlay() {
+  const main = document.getElementById('shellChart');
+  const ov   = document.getElementById('pickOverlay');
+  ov.width  = main.width;
+  ov.height = main.height;
+}
+
+// ── Draw probe crosshair + radius line on overlay ─────────────────────────────
+function drawPick(dataX, dataY) {
+  if (!chart) return;
+  const ov  = document.getElementById('pickOverlay');
+  const ctx = ov.getContext('2d');
+  ctx.clearRect(0, 0, ov.width, ov.height);
+
+  const dpr = ov.width / ov.offsetWidth || window.devicePixelRatio || 1;
+  ctx.save();
+  ctx.scale(dpr, dpr);
+
+  const xS = chart.scales.x, yS = chart.scales.y;
+  const px = xS.getPixelForValue(dataX);
+  const py = yS.getPixelForValue(dataY);
+  const ox = xS.getPixelForValue(0);
+  const oy = yS.getPixelForValue(0);
+
+  // Radius line from origin
+  ctx.strokeStyle = 'rgba(180,30,30,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(px, py); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Crosshair
+  const sz = 9;
+  ctx.strokeStyle = '#c62828'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px - sz, py); ctx.lineTo(px + sz, py);
+  ctx.moveTo(px, py - sz); ctx.lineTo(px, py + sz);
+  ctx.stroke();
+
+  // Circle at probe point
+  ctx.beginPath();
+  ctx.arc(px, py, 5, 0, 2 * Math.PI);
+  ctx.fillStyle = 'rgba(198,40,40,0.25)';
+  ctx.fill();
+  ctx.strokeStyle = '#c62828'; ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── Update the pick result panel ─────────────────────────────────────────────
+function updatePickResult(dataX, dataY, d) {
+  const r   = Math.sqrt(dataX * dataX + dataY * dataY);
+  const sqD = Math.sqrt(d);
+  const p   = normTailProb(r, d);
+  const tail = r * r <= d ? '≤' : '≥';
+  const el  = document.getElementById('pickResult');
+  el.innerHTML =
+    `<span style="color:var(--text-dim);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;">Noise probe</span><br>` +
+    `<strong style="color:var(--text);">‖ε‖ = ${r.toFixed(3)}</strong>` +
+    `<span style="color:var(--text-dim);margin:0 10px;">|</span>` +
+    `Typical radius √d ≈ ${sqD.toFixed(3)}` +
+    `<span style="color:var(--text-dim);margin:0 10px;">|</span>` +
+    `Deviation from shell: ${(r - sqD >= 0 ? '+' : '')}${(r - sqD).toFixed(3)}<br>` +
+    `<span style="font-size:1.05rem;">` +
+    `Typicality = <strong style="color:var(--accent);">${fmtSci(p)}</strong>` +
+    `</span>` +
+    `<span style="color:var(--text-dim);font-size:0.8rem;margin-left:10px;">(2·min[P(‖ε‖≤r), P(‖ε‖≥r)] — peaks at shell, zero at center &amp; far extremes)</span>`;
+}
+
+// ── Wire up mouse interaction on chart-wrap ───────────────────────────────────
+document.querySelector('.chart-wrap').addEventListener('mousemove', function(e) {
+  if (!chart) return;
+  const canvas = document.getElementById('shellChart');
+  const rect   = canvas.getBoundingClientRect();
+  // Chart.js 4 scales use CSS pixel coordinates — no DPR multiplication
+  const dataX  = chart.scales.x.getValueForPixel(e.clientX - rect.left);
+  const dataY  = chart.scales.y.getValueForPixel(e.clientY - rect.top);
+  lastPick = { x: dataX, y: dataY };
+  drawPick(dataX, dataY);
+  updatePickResult(dataX, dataY, currentD);
+});
+
+document.querySelector('.chart-wrap').addEventListener('mouseleave', function() {
+  lastPick = { x: 0, y: 0 };
+  drawPick(0, 0);
+  updatePickResult(0, 0, currentD);
+});
+
+// ── Main update ──────────────────────────────────────────────────────────────
+function update() {
+  const d = currentD;
+  const n = parseInt(document.getElementById('nSlider').value);
+
+  document.getElementById('dimVal').textContent = d.toLocaleString();
+  document.getElementById('nVal').textContent   = n;
+  document.getElementById('dBadge').textContent = 'd = ' + d.toLocaleString();
+
+  // Sync preset chips
+  document.querySelectorAll('.task-sel-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.d) === d);
+  });
+
+  // Sample: cap actual simulation at 2000 dims and scale norms; CLT makes this excellent for large d
+  const dSim = Math.min(d, 2000);
+  const rawR  = sampleNorms(dSim, n);
+  const scale = Math.sqrt(d / dSim);
+  const norms = rawR.map(r => r * scale);
+
+  const sqrtD = Math.sqrt(d);
+  const band  = Math.max(sqrtD * 0.12, 1);
+
+  // Stats
+  const meanR  = norms.reduce((a, b) => a + b, 0) / n;
+  const r2s    = norms.map(r => r * r);
+  const meanR2 = r2s.reduce((a, b) => a + b, 0) / n;
+  const stdR2  = Math.sqrt(r2s.reduce((a, b) => a + (b - meanR2) ** 2, 0) / n);
+  const relSpr = Math.sqrt(2 / d);
+
+  document.getElementById('statExpected').textContent = sqrtD.toFixed(2);
+  document.getElementById('statMean').textContent     = meanR.toFixed(2);
+  document.getElementById('statStd').textContent      = stdR2.toFixed(2);
+  document.getElementById('statRel').textContent      = relSpr.toFixed(4);
+
+  // Annotation
+  const sorted = [...norms].sort((a, b) => a - b);
+  const p5     = sorted[Math.floor(n * 0.05)].toFixed(2);
+  const p95    = sorted[Math.floor(n * 0.95)].toFixed(2);
+  document.getElementById('annotation').textContent =
+    `Middle 90% of norms lie in [${p5}, ${p95}]. Shell radius √d ≈ ${sqrtD.toFixed(2)}. ` +
+    `CoV of ‖x‖² = √(2/d) = ${relSpr.toFixed(4)} → 0 as d → ∞.`;
+
+  // Scatter data: place each sample at (r·cosθ, r·sinθ)
+  const pts = norms.map(r => {
+    const theta = Math.random() * 2 * Math.PI;
+    return { x: r * Math.cos(theta), y: r * Math.sin(theta), r };
+  });
+
+  const lim = sqrtD * 1.55 + 1;
+
+  if (chart) { chart.destroy(); chart = null; }
+  const ctx2d = document.getElementById('shellChart').getContext('2d');
+  chart = new Chart(ctx2d, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        data: pts.map(p => ({ x: p.x, y: p.y })),
+        pointBackgroundColor: pts.map(p => normColor(p.r, sqrtD, band)),
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: item => `‖x‖ = ${pts[item.dataIndex].r.toFixed(3)}` }
+        }
+      },
+      scales: {
+        x: {
+          min: -lim, max: lim,
+          title: { display: true, text: 'x₁ (radius \xd7 cosθ)', color: axisColor, font: { size: 12, family: "'Noto Sans', sans-serif" } },
+          ticks: { color: axisColor, maxTicksLimit: 7, font: { size: 11 } },
+          grid: { color: gridColor }
+        },
+        y: {
+          min: -lim, max: lim,
+          title: { display: true, text: 'x₂ (radius \xd7 sinθ)', color: axisColor, font: { size: 12, family: "'Noto Sans', sans-serif" } },
+          ticks: { color: axisColor, maxTicksLimit: 7, font: { size: 11 } },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+  chart._sqrtD = sqrtD;
+
+  // Sync overlay and refresh probe display with current lastPick
+  syncOverlay();
+  drawPick(lastPick.x, lastPick.y);
+  updatePickResult(lastPick.x, lastPick.y, d);
+}
+
+// ── Preset buttons ────────────────────────────────────────────────────────────
+document.querySelectorAll('.task-sel-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const d = parseInt(btn.dataset.d);
+    currentD = d;
+    const slider = document.getElementById('dimSlider');
+    slider.value = Math.min(d, 10000);
+    update();
+  });
+});
+
+document.getElementById('dimSlider').addEventListener('input', function () {
+  currentD = parseInt(this.value);
+  update();
+});
+
+document.getElementById('nSlider').addEventListener('input', update);
+
+// ── KaTeX ─────────────────────────────────────────────────────────────────────
+renderMathInElement(document.getElementById('math'), {
+  delimiters: [
+    { left: '\\[', right: '\\]', display: true },
+    { left: '\\(', right: '\\)', display: false }
+  ]
+});
+// Also render the "not enough" display math in the last section
+renderMathInElement(document.body, {
+  delimiters: [
+    { left: '\\[', right: '\\]', display: true },
+    { left: '\\(', right: '\\)', display: false }
+  ]
+});
+
+// ── Nav scroll-spy ────────────────────────────────────────────────────────────
+(function () {
+  const links = document.querySelectorAll('nav a.nav-sec');
+  const ids = Array.from(links).map(a => a.getAttribute('href').slice(1));
+  const onScroll = () => {
+    let current = ids[0];
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= 80) current = id;
+    }
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+// ── Initial render ────────────────────────────────────────────────────────────
+update();
+</script>
+</body>
+</html>
