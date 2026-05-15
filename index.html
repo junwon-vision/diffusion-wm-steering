@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Steering Results</title>
-  <link rel="icon" href="anxiety.png" type="image/png">
-  <link rel="apple-touch-icon" href="anxiety.png">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -69,15 +69,14 @@
       letter-spacing: -0.02em;
       margin: 0 auto 16px;
       max-width: var(--max-w);
-      text-align: center; line-height: 1.4;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.45em; line-height: 1.4;
     }
     .hero-icon {
-      display: inline;
-      vertical-align: middle;
-      width: 1.15em; height: 1.15em;
+      display: block;
+      flex-shrink: 0;
+      width: 3.0em; height: 3.0em;
       object-fit: contain;
-      margin-right: 0.25em;
-      position: relative; top: -0.05em;
     }
     .hero p {
       font-size: 1rem; color: var(--text-sec);
@@ -417,7 +416,7 @@
 
 <!-- ═══ Hero ═══ -->
 <div class="hero">
-  <h1><img class="hero-icon" src="anxiety.png" alt="">StressDream: Steering Video World Models<br>for Robust Policy Evaluation and Improvement</h1>
+  <h1><img class="hero-icon" src="icon.png" alt=""><span>StressDream: Steering Video World Models<br>for Robust Policy Evaluation and Improvement</span></h1>
   <p>We present <strong>StressDream</strong>, an inference-time method that optimizes diffusion noise to steer video world models toward plausible, high-impact outcomes — enabling robust evaluation and improvement of robotic policies.</p>
   <div class="hero-links">
     <span class="hero-btn tentative">
